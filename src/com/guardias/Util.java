@@ -31,10 +31,15 @@ public class Util {
 	    public final static long DAYS_MILLIS = MINUTE_MILLIS*60*24;
 	    
 	    private final static String  RUTA_DATA_XML ="";
+	    
+	    
+	    public  enum eTipoDia{DIARIO,FESTIVO} ;
 	    public  enum eTipo{RESIDENTE,ADJUNTO} ;
 	    public  enum eSubtipoResidente {R1,R2,R3,R4,R5,SIMULADO,ROTANTE} ;
 	    
-	    
+	    /* ESTO NOS SIRVE PARA DISTRIBUIR ENTRE EL NUMERO DE SEMANAS COMPLETAS */
+	    /* PUEDE SER UN PROBLEMA QUE HAYA SEMANAS DE MENOS  DE 7 DIAS Y QUE SE DISTRIBUYAN UNIFORMEMENTE POR ESAS TB LOS RESIDENTES */ 
+	    public final static int CALC_NUM_SEMANAS_MES= 4; 
 	    
 	    
 	    public  enum eTipoGuardia {PRESENCIA,LOCALIZADA,REFUERZO} ; 

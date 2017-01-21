@@ -109,7 +109,7 @@ for (int j=1;j<=_daysOfMonth;j++)
 			
 			Medico oM = (Medico) oLM.get(0);
 			
-			_EventsJSON += "<div class='orden" + classContador + " " + _classTipo +  " " + oM.getTipo().toString().toLowerCase() +" " + sFestivo + "' id=" + oM.getID() + ">"   + oM.getApellidos()+ "," + oM.getNombre() + "</div>";
+			_EventsJSON += "<div class='orden" + classContador + " " + oM.getTipo().toString().toLowerCase()  +  " " + _classTipo+" " + sFestivo + "' id=" + oM.getID() + ">"   + oM.getApellidos()+ "," + oM.getNombre() + "</div>";
 			
 			classContador+=1;
 								

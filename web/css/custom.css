@@ -88,6 +88,13 @@
 	  border : 0px;
 	}
 	
+	/* SOLO PARA EL POOL, LO DEJAMOS EN NARANJA  */
+	.poolday .fc-content {    
+     background-color: rgba(204, 162, 52, 0.66); 
+      /* background: none;
+	  border : 0px;*/
+	}
+	
 	.ui-sortable tr:hover {
     	cursor: pointer;
 	}

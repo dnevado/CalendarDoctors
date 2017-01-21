@@ -20,7 +20,7 @@
 	<link href='<%=request.getContextPath()%>/css/jquery-ui.css' rel='stylesheet' />
 	<link href='<%=request.getContextPath()%>/css/fullcalendar.css' rel='stylesheet' />
 	<link href='<%=request.getContextPath()%>/css/fullcalendar.print.css' rel='stylesheet' media='print' />
-    <link href='<%=request.getContextPath()%>/css/custom.css?er4544' rel='stylesheet'/> 
+    <link href='<%=request.getContextPath()%>/css/custom.css?er4544423423423' rel='stylesheet'/> 
 	<!--  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Open+Sans" /> -->
 	<!-- Custom Fonts -->
 	<link href="<%=request.getContextPath()%>/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
@@ -28,7 +28,8 @@
 	<script src='<%=request.getContextPath()%>/js/lib/moment.min.js'></script>
 	<script src='<%=request.getContextPath()%>/js/lib/jquery.min.js'></script>
 	<script src='<%=request.getContextPath()%>/js/bootstrap.min.js'></script>
-	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	<script src='<%=request.getContextPath()%>/js/jquery-ui.js'></script>
+	<script src='<%=request.getContextPath()%>/js/jquery.ui.es.js'></script>
 	<script src='<%=request.getContextPath()%>/js/fullcalendar.min.js'></script>
 	<script src='<%=request.getContextPath()%>/js/locale-all.js'></script>
 
@@ -236,7 +237,7 @@ function fSaveDatabase(){
 	var contador=0;
 	var _Date;
 	
-	$('#loading').show();
+	$('#loading').modal('show');
 	
 	var _Date = $('#calendar').fullCalendar('getDate');
 	
@@ -328,8 +329,8 @@ function fSaveDatabase(){
 	          type: 'POST',	          
 	          url: '<%=request.getContextPath()%>/medico/reordenar_grabar_guardias.jsp',
 	          success: function(data) {   
-	        	  $('#loading').hide();
-	        	  $('#loaded').dialog();
+	        	  $('#loading').modal('hide');
+	        	  $('#loaded').modal('show');
 	          },
 	          error: function(data) {   
 	        	  alert("Error" + data);
@@ -479,13 +480,13 @@ function fSaveDatabase(){
 		
 		$('#calendar').fullCalendar({
 			header: {
-				left: 'prev,next today',
-				center: 'title',
-				right: 'month'
+			     left: 'prev,next today',
+	                center: 'title',
+	                right: 'month,basicWeek,basicDay'
 			},
 		//	defaultDate: '2016-09-19',
 			navLinks: true, // can click day/week names to navigate views
-			editable: true,
+			editable: true,			 
 			eventLimit: true, // allow "more" link when too many events
 			color: "yellow",   // an option!
 		    textColor: "black", // an option!
@@ -499,10 +500,11 @@ function fSaveDatabase(){
 				}
 			},
 			 loading: function (bool) {
-				if (bool) 
-					    $('#loading').show();
+				if (bool)
+					    
+					    $('#loading').modal('show');
 					  else 
-					    $('#loading').hide();
+					    $('#loading').modal('hide');
 			 } ,
 			    eventAfterAllRender: function (view) {
 			    	_FillDataDays();
@@ -510,6 +512,8 @@ function fSaveDatabase(){
 			    },
 			    eventRender: function (event, element) {
 			    	element.find('.fc-title').html(event.title);
+			    	if (event.title.indexOf("poolday")>=0)
+			    		element.addClass('poolday');
 			    }
 		});
 		
@@ -518,6 +522,8 @@ function fSaveDatabase(){
 		$('#calendar').fullCalendar('gotoDate','<%=_SelectedMonth%>');
 		
 		<% } %>
+		
+		
 		
 			
 		
@@ -670,12 +676,48 @@ function fSaveDatabase(){
                            </div>
                   </div>
                 <!-- /.col-lg-12 -->
-				<div id="loading" class="progress">	      
+				<!-- Modal -->
+				<div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+				  <div class="modal-dialog" role="document">
+				    <div class="modal-content">
+				      <div class="modal-header">
+				        <h5 class="modal-title" id="exampleModalLabel">Cargando datos</h5>				        
+				      </div>
+				      <div class="modal-body">
+				        <span>Por favor, espere..</span>
+				      </div>
+				      <!--  <div class="modal-footer">
+				        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				        <button type="button" class="btn btn-primary">Save changes</button>
+				      </div> -->
+				    </div>
+				  </div>
+				</div>                
+<!-- 				<div id="loading2" class="progress">	      
 					  <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
 					    <span>Ejecutando, por favor, espere..</span>
 				  	</div>
-				</div>
-				<div style="display:none" id="loaded" title="Correcto"><p>Datos almacenados satisfactoriamente</p></div>
+				</div> -->
+				<div class="modal fade" id="loaded" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+				  <div class="modal-dialog" role="document">
+				    <div class="modal-content">
+				      <div class="modal-header">
+				        <h5 class="modal-title" id="exampleModalLabel">Correcto</h5>
+				        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				          <span aria-hidden="true">&times;</span>
+				        </button>
+				      </div>
+				      <div class="modal-body">
+				        <span>Los datos han sido almacenados correctamente</span>
+				      </div>
+				      <div class="modal-footer">
+				        <button type="button" class="btn btn-primary" data-dismiss="modal">Cerrar</button>
+				      <!--    <button type="button" class="btn btn-primary">Save changes</button>
+				      </div> -->
+				    </div>
+				  </div>
+				</div> 
+				<div style="display:none" id="loaded2" title="Correcto"><p>Datos almacenados satisfactoriamente</p></div>
       </div>    
             	  
 	  

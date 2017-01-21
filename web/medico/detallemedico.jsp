@@ -69,7 +69,17 @@ function getday(dateText, inst) {
 
 function date_(){
 	
-	$("#vacaciones").multiDatesPicker( {dateFormat: "yy-mm-dd",  minDate: "-1M", maxDate: "+2M"});		
+	$("#vacaciones").multiDatesPicker( {dateFormat: "yy-mm-dd",  minDate: "-1M", maxDate: "+2M",
+	    // Primer dia de la semana El lunes
+	    firstDay: 1,
+	    // Dias Largo en castellano
+	    dayNames: [ "Domingo", "Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado" ],
+	    // Dias cortos en castellano
+	    dayNamesMin: [ "Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa" ],
+	    // Nombres largos de los meses en castellano
+	    monthNames: [ "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" ],
+	    // Nombres de los meses en formato corto 
+	    monthNamesShort: [ "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dec" ]});		
 	$('#vacaciones').multiDatesPicker('addDates', holidays);
 	
 }
@@ -216,44 +226,55 @@ function _GuardarMedico()
 			
 		}
 		else
+		{
+			_NuevoMedico.setID(Long.parseLong(ID));
 			MedicoDBImpl.UpdateMedico(Long.parseLong(ID), _NuevoMedico);
-		
+		}
 		/* VACACIONES */
 		/* COGEMOS EL DIA ACTUAL Y BORRAMOS HACIA ADELANTE */
 		/* OJO, PARA LAS VACACIONES, AL SER FUTURAS, BORRAMOS CADA REGISTRO PREVIO QUE HUBIERA EN EL FUTURO, DEL MES EN CURSO Y DEL SGTE */
 		/* vamos a borrar vacaciones del mes actual */
 		
-		String  _MesMenorVacaciones = ""; 
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 		
-		for (int j=0;j<aVacaciones.length;j++)
+		Date _Hoy = new Date();
+		_Hoy.setDate(1);// desde el dia uno
+		
+		String  _MesMenorVacaciones = formatter.format(_Hoy); 
+		
+		if (aVacaciones!=null)
 		{
-			SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");			
-			String DiaVacaciones = aVacaciones[j];
-			if (_MesMenorVacaciones.equals(""))
-				_MesMenorVacaciones = DiaVacaciones;
-			
-			if (_MesMenorVacaciones.compareTo(DiaVacaciones)>0)
-				_MesMenorVacaciones = DiaVacaciones;
-					
-			//VacacionesDBImpl.AddVacacionesMedico(new Long(ID), DiaVacaciones);
-			
-			
+			for (int j=0;j<aVacaciones.length;j++)
+			{
+							
+				String DiaVacaciones = aVacaciones[j];
+				if (_MesMenorVacaciones.equals(""))
+					_MesMenorVacaciones = DiaVacaciones;
+				
+				if (_MesMenorVacaciones.compareTo(DiaVacaciones)>0)
+					_MesMenorVacaciones = DiaVacaciones;
+				
+				
+			}
 		}
-		/* BORRAMOS DESDE EL MES */
 		
+		/* BORRAMOS DESDE EL MES */
+			
 		VacacionesDBImpl.DeleteVacacionesMedicoDesde(new Long(ID), _MesMenorVacaciones );
 		
-		for (int j=0;j<aVacaciones.length;j++)
+		if (aVacaciones!=null)
 		{
-			SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");			
-			String DiaVacaciones = aVacaciones[j];
-			
-			VacacionesDBImpl.AddVacacionesMedico(new Long(ID), DiaVacaciones);
-			
-			
-		}
+			for (int j=0;j<aVacaciones.length;j++)
+			{					
+				String DiaVacaciones = aVacaciones[j];
+				
+				VacacionesDBImpl.AddVacacionesMedico(new Long(ID), DiaVacaciones);
+				
+				
+			}
 		
-		 
+		}
+			
 		
 		 //oUtilMedicos.GrabarMedico(_Path,"s", _NuevoMedico);
 		 
@@ -360,13 +381,20 @@ function _GuardarMedico()
 						<div class="form-group">
 							<label  class="control-label" id="labelguardiassolo">Guardias Solo:</label>
 							<input <%=_selected%> type="checkbox" name="guardiassolo"  id ="guardiassolo" value='<%=_oMedico.isGuardiaSolo()%>'/>
-						</div>						
+						</div>	
+						<% _selected=""; 
+						if (_oMedico.isActivo())
+							_selected="checked";
+						
+						%>
 						<div class="form-group">
-							<label  class="control-label">Vacaciones:</label>
+							<label  class="control-label" >Activo:</label>
+							<input <%=_selected%> type="checkbox" <%=_selected %> name="activo" id="activo" value='<%=_oMedico.isActivo()%>'/>
+						</div>					
+						<div class="form-group">
+							<label  class="control-label"></label>
 							<div id="vacaciones"></div>
 							<script>
-
-							
 							<% 
 							
 							if (_lVacaciones!=null && _lVacaciones.size()>0)
@@ -380,19 +408,10 @@ function _GuardarMedico()
 								}
 							}
 							%>
-							</script>							
-							 <button type="button" onclick="date_()" class="btn btn-sm btn-warning">Abrir</button> 
-							
+							</script>
+							 <button type="button" onclick="date_()" class="pull-center btn btn-outline btn-success">Vacaciones</button>							 							  							
 						</div>						
-						<% _selected=""; 
-						if (_oMedico.isActivo())
-							_selected="checked";
 						
-						%>
-						<div class="form-group">
-							<label  class="control-label" >Activo:</label>
-							<input <%=_selected%> type="checkbox" <%=_selected %> name="activo" id="activo" value='<%=_oMedico.isActivo()%>'/>
-						</div>
 																	
 						<input type="hidden" name="guardar"  value='1'/>
 						<input type="hidden" name="id" id="id" value='<%=_oMedico.getID()%>'/>	
