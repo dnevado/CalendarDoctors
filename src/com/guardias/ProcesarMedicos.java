@@ -849,6 +849,8 @@ public class ProcesarMedicos {
 		Map<Long,Long> lUnSortedListaGuardiasMedicos = new HashMap <Long, Long>();
 		List<Long> keys = new ArrayList(_ListaGuardiasMedicos.keySet());
 
+		
+		/* PRIMERO, ORDENAMOS POR EL TOTAL QUE MENOS TENGA */
 		String _KeyTOTAL ="";
 	    for ( Long obj : keys ) {
 			

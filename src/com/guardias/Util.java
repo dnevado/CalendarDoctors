@@ -1,11 +1,13 @@
 package com.guardias;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Properties;
 import java.util.ResourceBundle;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -21,11 +23,21 @@ import com.google.api.services.calendar.model.EventAttendee;
 import com.google.api.services.calendar.model.EventDateTime;
 import com.google.api.services.calendar.model.EventReminder;
 import com.guardias.database.ConfigurationDBImpl;
+import java.util.*;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.activation.FileDataSource;
+import javax.mail.*;
+import javax.mail.internet.*;
 
 public class Util {
 
-
+		public  static final String _TITULO_EVENTO ="Guardia {TIPO}";
+		public  static final String _DESCRIPCION_EVENTO ="Guardia {TIPO} {FECHA}";
+		public  static final String _COLOR_EVENTO ="10";
+	
+	
 		public final static long SECOND_MILLIS = 1000;
 	    public final static long MINUTE_MILLIS = SECOND_MILLIS*60;
 	    public final static long DAYS_MILLIS = MINUTE_MILLIS*60*24;
@@ -42,7 +54,15 @@ public class Util {
 	    public final static int CALC_NUM_SEMANAS_MES= 4; 
 	    
 	    
-	    public  enum eTipoGuardia {PRESENCIA,LOCALIZADA,REFUERZO} ; 
+	    public  enum eTipoGuardia {PRESENCIA,LOCALIZADA,REFUERZO,SIMULADO} ;  // PONEMOS UN CASO ESPECIAL PARA LAS GUARDOAS DE ADJUNTOS SIN RESIDENTES (SIMULADO)
+	    public  static final String _EMAIL_GOOGLE_ACCOUNT ="refundable.tech@gmail.com";
+	    
+	    private  static final String _EMAIL_GOOGLE_ACCOUNT_FROM ="wearyours.noreply@gmail.com";
+	    private  static final String _EMAIL_GOOGLE_ACCOUNT_PASSWORD ="nevadodM1";
+	    private static String EMAIL_GOOGLE_ACCOUNT_HOST= "smtp.gmail.com";
+	    
+	    public static String MAIL_SUBJECT = "Guardias del mes ";
+	    public static String MAIL_BODY = "A continuación se incluye el calendario de guardias de ";
 	    
 	    
 	    private  static Long MAX_NUMERO_DIAS_SEGUIDOS_ADJUNTOS_VALUE = new Long(2);  // EXCEPTO PRESENCIA - PRESENCIA
@@ -72,12 +92,8 @@ public class Util {
 	    private static String oCONST_CALENDARIO_MINUTOS_RECORDATORIO = "CALENDARIO_MINUTOS_RECORDATORIO";  // 0 cero si no se quieren.
 	    private static String oCONST__SERVICE_CALENDAR = "ServiceCalendar";  // 0 cero si no se quieren.
 	    
-	    
-	    
-	    
-	    
-
-
+	
+	
 	 
 	public static int daysDiff( Date earlierDate, Date laterDate )
 	    {
@@ -85,14 +101,117 @@ public class Util {
 	        
 	        return (int)((laterDate.getTime()/DAYS_MILLIS) - (earlierDate.getTime()/DAYS_MILLIS));
 	    }
+	
+ 	
+
+
+	
+
+	public static void sendFromGMail(String[] to, String subject, String body, String PathToFile, String FileName ) throws IOException {
+        Properties props = System.getProperties();
+       
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.host", EMAIL_GOOGLE_ACCOUNT_HOST);
+        props.put("mail.smtp.user", _EMAIL_GOOGLE_ACCOUNT_FROM);
+        props.put("mail.smtp.password", _EMAIL_GOOGLE_ACCOUNT_PASSWORD);
+        props.put("mail.smtp.port", "587");
+        props.put("mail.smtp.auth", "true");
+
+        Session session = Session.getDefaultInstance(props);
+        MimeMessage message = new MimeMessage(session);
+
+        try {
+            message.setFrom(new InternetAddress(_EMAIL_GOOGLE_ACCOUNT_FROM));
+            InternetAddress[] toAddress = new InternetAddress[to.length];
+
+            // To get the array of addresses
+            for( int i = 0; i < to.length; i++ ) {
+                toAddress[i] = new InternetAddress(to[i]);
+            }
+
+            for( int i = 0; i < toAddress.length; i++) {
+                message.addRecipient(Message.RecipientType.BCC, toAddress[i]);
+            }
+            
+            message.addRecipient(Message.RecipientType.BCC, new InternetAddress(_EMAIL_GOOGLE_ACCOUNT_FROM));
+
+            BodyPart messageBodyPart = new MimeBodyPart();
+
+            Multipart multipart = new MimeMultipart();
+
+            // Set text message part          
+
+            // Part two is attachment
+         /*    messageBodyPart = new MimeBodyPart();         
+            DataSource source = new FileDataSource(PathToFile);
+            messageBodyPart.setDataHandler(new DataHandler(source));
+            messageBodyPart.setFileName(PathToFile);
+            multipart.addBodyPart(messageBodyPart); */                     
+            
+            /*MimeBodyPart textBodyPart = new MimeBodyPart();
+            textBodyPart.setText("Calendario.xls");
+
+            MimeBodyPart attachmentBodyPart= new MimeBodyPart();
+            DataSource source = new FileDataSource(PathToFile); // ex : "C:\\test.pdf"
+            attachmentBodyPart.setDataHandler(new DataHandler(source));
+            attachmentBodyPart.setFileName("2017-01-01.xls"); // ex : "test.pdf"
+
+            multipart.addBodyPart(textBodyPart);  // add the text part
+            multipart.addBodyPart(attachmentBodyPart); // add the attachement part
+            */
+            
+         // Create the message body part
+            
+
+            // Fill the message
+            messageBodyPart.setText(body);
+            
+            // Create a multipart message for attachment
+           
+            // Set text message part
+            multipart.addBodyPart(messageBodyPart);
+
+            // Second part is attachment
+            messageBodyPart = new MimeBodyPart();
+            String filename = "abc.txt";
+            DataSource source = new FileDataSource(PathToFile);
+            messageBodyPart.setDataHandler(new DataHandler(source));
+            messageBodyPart.setFileName(FileName);
+            multipart.addBodyPart(messageBodyPart);
+            
+            
+            
+            
+            
+            /* MimeBodyPart attachPart = new MimeBodyPart();
+            String attachFile = PathToFile;
+            attachPart.attachFile(attachFile);
+            multipart.addBodyPart(attachPart);
+            
+            attachPart.setContent(message, "text/html");
+            */
+            // Send the complete message parts
+            message.setContent(multipart);
+
+            message.setSubject(subject);
+          //  message.setText(body);
+            Transport transport = session.getTransport("smtp");
+            transport.connect(EMAIL_GOOGLE_ACCOUNT_HOST, _EMAIL_GOOGLE_ACCOUNT_FROM, _EMAIL_GOOGLE_ACCOUNT_PASSWORD);
+            transport.sendMessage(message, message.getAllRecipients());
+            transport.close();
+            
+            System.out.println("Sending mail " + subject );
+            
+        }
+        catch (AddressException ae) {
+            ae.printStackTrace();
+        }
+        catch (MessagingException me) {
+            me.printStackTrace();
+        }
+    }
 	 
-	 	
-
-
-
-
-
-
+	
 
 	public static String getoCONST_NUMERO_DIAS_SEGUIDOS_ADJUNTOS() {
 		return oCONST_NUMERO_DIAS_SEGUIDOS_ADJUNTOS;

@@ -13,5 +13,6 @@
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container"/>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.module.container"/>
+	<classpathentry kind="lib" path="web/WEB-INF/lib/google-api-services-drive-v3-rev55-1.22.0.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>

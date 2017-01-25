@@ -7,6 +7,7 @@ public class Guardias {
 	private Long  Festivo =  new Long(0);
 	private String  Tipo = "";  // localizada , presencia...
 	private String DiaGuardia;
+	private String IdEventoGCalendar; //evento ID de google calendar
 	
 	public Long getIdMedico() {
 		return IdMedico;
@@ -38,6 +39,12 @@ public class Guardias {
 	}
 	public String getDiaGuardia() {
 		return DiaGuardia;
+	}
+	public String getIdEventoGCalendar() {
+		return IdEventoGCalendar;
+	}
+	public void setIdEventoGCalendar(String idEventoGCalendar) {
+		IdEventoGCalendar = idEventoGCalendar;
 	}
 
 }

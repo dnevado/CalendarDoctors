@@ -197,6 +197,12 @@ for (int j=1;j<=_daysOfMonth;j++)
 				int TOTAL_REFUERZO_FESTIVO = GuardiasDBImpl.getTotalGuardiasPorMedicoTipo(oM.getID(), Util.eTipoGuardia.REFUERZO.toString().toLowerCase(),new Long(1));
 				int TOTAL_PRESENCIA_FESTIVO = GuardiasDBImpl.getTotalGuardiasPorMedicoTipo(oM.getID(), Util.eTipoGuardia.PRESENCIA.toString().toLowerCase(),new Long(1));	
 				int TOTAL_LOCALIZADA_FESTIVO = GuardiasDBImpl.getTotalGuardiasPorMedicoTipo(oM.getID(), Util.eTipoGuardia.LOCALIZADA.toString().toLowerCase(),new Long(1));
+				
+				int TOTAL_SIMULADOS= GuardiasDBImpl.getTotalGuardiasPorMedico_DeSimulados(oM.getID(), new Long(0));
+				int TOTAL_SIMULADOS_FESTIVO = GuardiasDBImpl.getTotalGuardiasPorMedico_DeSimulados(oM.getID(), new Long(1));
+				
+				
+				
 				/* FIN 20170201 ACUMULAMOS LO DEL AÑO EN CURSO PARA VER SI CUADRAN MEJOR LAS CIFRAS EQUITATIVAS>*/
 				
 				/***************************************************
@@ -209,8 +215,8 @@ for (int j=1;j<=_daysOfMonth;j++)
 				_lDatosGuardiasMedico.put("_TOTAL_" + Util.eTipoGuardia.PRESENCIA.toString() + "_FESTIVOS_MES",TOTAL_PRESENCIA_FESTIVO);
 				_lDatosGuardiasMedico.put("_TOTAL_" + Util.eTipoGuardia.LOCALIZADA.toString()+ "_FESTIVOS_MES",TOTAL_LOCALIZADA_FESTIVO);
 				_lDatosGuardiasMedico.put("_TOTAL_" + Util.eTipoGuardia.REFUERZO.toString()+ "_FESTIVOS_MES",TOTAL_REFUERZO_FESTIVO);
-				_lDatosGuardiasMedico.put("_TOTAL_" + Util.eSubtipoResidente.SIMULADO.toString() + "_DIARIO_MES",0);
-				_lDatosGuardiasMedico.put("_TOTAL_" + Util.eSubtipoResidente.SIMULADO.toString() + "_FESTIVOS_MES",0);
+				_lDatosGuardiasMedico.put("_TOTAL_" + Util.eSubtipoResidente.SIMULADO.toString() + "_DIARIO_MES",TOTAL_SIMULADOS);
+				_lDatosGuardiasMedico.put("_TOTAL_" + Util.eSubtipoResidente.SIMULADO.toString() + "_FESTIVOS_MES",TOTAL_SIMULADOS_FESTIVO);
 							
 				
 			}			
@@ -641,7 +647,7 @@ HINT --> ORDENAR RESIDENTES POR RESIDENTES Y ULTIMO SIMULADOS
 /* OJO, QUE LA SEMANA ULTIMA PUEDE CONTENER UN UNICO DIA */
  int _RESIDENTES_SEMANA =(_NUM_TOTAL_GUARDIAS_CUBIERTAS_RESIDENTES.intValue()) / Util.CALC_NUM_SEMANAS_MES; // METEMOS SIEMPRE FIJO 4 
 /* RESTO MAYOR DE 0 , SUMAMOS UNO MAS PARA PODER ASIGNARLOS , MAS FLEXIBLES */
- if (_NUM_TOTAL_GUARDIAS_CUBIERTAS_RESIDENTES.intValue() / Util.CALC_NUM_SEMANAS_MES>0)	// cubiertas por residentes 
+  if (_NUM_TOTAL_GUARDIAS_CUBIERTAS_RESIDENTES.intValue() / Util.CALC_NUM_SEMANAS_MES>0)	// cubiertas por residentes 
 {
 	_RESIDENTES_SEMANA+=1;
 }
@@ -840,7 +846,26 @@ for (int j=1;j<=NUM_SEMANAS_MES;j++)
 					 if (AllMedicosVerificados)  bEncontrado =true;
 					 else
 					 {
-						if  (bAsignadosResidentesSemana && bAdjuntoConMenosSimulados && !ExcedeLimiteGuardiasMes && !ExcedeHorasSeguidas) // no cumpla las condiciones
+		 				 
+						 // GUARDIAS TOTALES 				  
+						    
+						//PRESENCIA 
+						 Long  IDAdjuntoGuardiaDia = ProcesarMedicos.getMedicoGuardiaDia(j, lMedicosGuardias, Util.eTipo.ADJUNTO, _lAdjuntos);
+						
+						
+						
+						 Util.eTipoGuardia _TipoGuardiaAdjunto = Util.eTipoGuardia.SIMULADO; // SOLO PARA LOS ADJUNTOS CON UN SIMULADO 
+							 				 				
+						 String _Key = "_TOTAL_" + _TipoGuardiaAdjunto.toString() + "_DIARIO_MES";
+						 if (_EsFestivo)  _Key = _Key.concat("_FESTIVOS");				 
+						 	_Key = "_TOTAL_" + _TipoGuardiaAdjunto.toString() + "_FESTIVOS_MES";
+						 Long AdjuntoConMenosGuardias = ProcesarMedicos.AdjuntoMenosGuardiasYHorasSeguidas(true, _TipoGuardiaAdjunto, _Key, lMedicosGuardias, _lAdjuntos, IDAdjuntoGuardiaDia,DIASEMANA.intValue(), _daysOfMonth);
+						 bAdjuntoConMenosSimulados = AdjuntoConMenosGuardias.equals(oM.getID());
+						
+						 // ANTE EL DILEMA bAdjuntoConMenosSimulados &&
+						 // SI EL DIA ES EL QUE MENOS SIMULADOS TIENE,
+						 /* 2017-23-01 */
+						if  (!bAsignadosResidentesSemana && bAdjuntoConMenosSimulados &&  !ExcedeLimiteGuardiasMes && !ExcedeHorasSeguidas) // no cumpla las condiciones
 						{						
 								bEncontrado =true;
 						}					
@@ -849,8 +874,9 @@ for (int j=1;j<=NUM_SEMANAS_MES;j++)
 								_ListaIDMedicosVerificados.add(oM.getID());
 					 }
 				 }
-				 else  // residente, si están todos ya rellenos a nivel de semana, dejamos hueco al simulado 						 
-				 	if (!bAsignadosResidentesSemana && NoTieneVacaciones && !ExcedeLimiteGuardiasMes && !ExcedeHorasSeguidas 
+				 else  // residente, si están todos ya rellenos a nivel de semana, dejamos hueco al simulado
+				   /* 2017-23-01 */
+				 	if (!bAsignadosResidentesSemana  && !bAdjuntoConMenosSimulados && NoTieneVacaciones && !ExcedeLimiteGuardiasMes && !ExcedeHorasSeguidas 
 							&& !TienePoolDayAsignadoDiaSgte && (!_EsFestivo || (_EsFestivo &&   EsResidenteConMenosFestivos)))
 								bEncontrado =true;
 				 	else

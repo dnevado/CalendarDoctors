@@ -9,4 +9,18 @@
     <welcome-file>default.htm</welcome-file>
     <welcome-file>default.jsp</welcome-file>
   </welcome-file-list>
+  <filter>
+    <filter-name>LoginFilter</filter-name> <!-- mandatory -->
+    <filter-class>com.guardias.login.LoginFilter</filter-class> <!-- mandatory -->
+    <init-param> <!-- optional -->
+    <param-name>UrlLogin</param-name>
+    <param-value>login.jsp</param-value>
+    </init-param>
+  </filter>
+    <filter-mapping>
+    <filter-name>LoginFilter</filter-name> <!-- mandatory -->
+    <url-pattern>/*</url-pattern> <!-- either url-pattern or servlet-name is mandatory -->
+    <servlet-name>LoginServlet</servlet-name>
+    <dispatcher>REQUEST</dispatcher>
+  </filter-mapping>
 </web-app>

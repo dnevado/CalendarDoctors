@@ -70,10 +70,10 @@ public class ConfigurationDBImpl {
 	
 		Configuracion oConfiguration= new Configuracion();
 	  Statement stmt = null;	 
-	  Connection MiConexion =ConexionGuardias.GetConexionGuardias();
+	  Connection MiConexion =ConexionGuardias.GetConexionGuardias();   
 	  
 	  
-	  String stSQL = "SELECT * FROM configuracion where  config_key='" + KeyValue + "'";
+	  String stSQL = "SELECT * FROM configuracion where  config_key='" + KeyValue + "'";  
 	  
 	 
 	 try {

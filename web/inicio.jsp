@@ -2,6 +2,7 @@
     pageEncoding="UTF-8"%>
     
 <%@page import="com.guardias.*"%>
+<%@page import="com.guardias.database.*"%> 
 <%@page import="java.util.*"%>
 
 <!DOCTYPE html>
@@ -53,7 +54,7 @@
 
 	/* por defecto de la base de datos si hay */
 	
-	
+	String _CalendarioGoogle = ConfigurationDBImpl.GetConfiguration(Util.getoCALENDARIO_GMAIL()).getValue();	
 	
 	String _PageToFill="get_guardias.jsp";
 	String _SelectedMonth = "";
@@ -414,6 +415,26 @@ function fSaveDatabase(){
 
 	}
 	
+	function  fn_ExcelMail()
+	{
+
+		var _Date = $('#calendar').fullCalendar('getDate').date(1).format("YYYY-MM-DD");		
+		$("#loadingmail").modal("show");
+		 $.ajax({	          
+	          data: {filecontent3: $(".fc table").html(), fechaExcel3 : _Date}, //stringify is important,
+	          type: 'POST',	          
+	          url: '<%=request.getContextPath()%>/toExcelEmail.jsp',
+	          success: function(data) {   
+	        	  $("#loadingmail").modal("hide");
+	        	  $("#loaded").modal("show");
+	        	  
+	          },
+	          error: function(data) {   
+	        	  alert("Error:" + data);
+	          }
+	      });
+
+	}
 	
 	function fn_Excel()
 	{
@@ -656,7 +677,7 @@ function fSaveDatabase(){
 				                        <div class="panel-body">				                            
 				                            <form accept-charset="UTF-8" target="frame1" id=ff3 method=post action="toExcel.jsp" enctype="application/x-www-form-urlencoded">
 												<input  type="hidden" name="fechaExcel" id=fechaExcel value='2016-09-10'/>
-												<a href="javascript:void(0)" onclick="fn_Excel()">
+												<a href="javascript:fn_Excel()">
 												<div class="panel-footer">
 					                                <span class="pull-left">Descargar</span>
 					                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
@@ -666,7 +687,20 @@ function fSaveDatabase(){
 												<input type="hidden" id="filecontent" name="filecontent">												
 												<!-- <input  class="ui-button ui-widget ui-corner-all" onclick="fn_Excel()" type="button" value="Descargar Excel"/> -->
 												
-											</form>
+											</form>											
+											
+												<a href="javascript:fn_ExcelMail()">
+												<div class="panel-footer">
+					                                <span class="pull-left">Enviar Email</span>
+					                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+					                                <div class="clearfix"></div>
+					                            </div>
+												</a>
+											   <input  type="hidden" name="fechaExcel3" id=fechaExcel3 value='2016-09-10'/>
+												<input type="hidden" id="filecontent3" name="filecontent3">												
+												<!-- <input  class="ui-button ui-widget ui-corner-all" onclick="fn_Excel()" type="button" value="Descargar Excel"/> -->
+												
+											
 										</div>
 									</div>
 									
@@ -677,11 +711,36 @@ function fSaveDatabase(){
                   </div>
                 <!-- /.col-lg-12 -->
 				<!-- Modal -->
+				<div class="modal fade" id="loadingmail" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+				  <div class="modal-dialog" role="document">
+				    <div class="modal-content">
+				      <div class="modal-header">				      
+				        <h5 class="modal-title" id="exampleModalLabel">Enviando mail a lista de médicos</h5>				        
+				      </div>
+				      <div class="modal-body">
+				        <span>Por favor, espere..</span>
+				      </div>
+				      <!--  <div class="modal-footer">
+				        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				        <button type="button" class="btn btn-primary">Save changes</button>
+				      </div> -->
+				    </div>
+				  </div>
+				</div>
+				
+				
+				
 				<div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
 				  <div class="modal-dialog" role="document">
 				    <div class="modal-content">
 				      <div class="modal-header">
-				        <h5 class="modal-title" id="exampleModalLabel">Cargando datos</h5>				        
+				      <% 
+				      	String _Message="Cargando datos.";  
+				      	if (_CalendarioGoogle.equals("S")) 
+				      			_Message = _Message.concat("Recuerda que una vez que guardes un mes se procederá a sincronizar el calendario (Google Calendar)");
+				      	
+				      %>
+				        <h5 class="modal-title" id="exampleModalLabel"><%=_Message %></h5>				        
 				      </div>
 				      <div class="modal-body">
 				        <span>Por favor, espere..</span>
@@ -708,7 +767,7 @@ function fSaveDatabase(){
 				        </button>
 				      </div>
 				      <div class="modal-body">
-				        <span>Los datos han sido almacenados correctamente</span>
+				        <span>Los datos han sido almacenados y enviados  correctamente</span>
 				      </div>
 				      <div class="modal-footer">
 				        <button type="button" class="btn btn-primary" data-dismiss="modal">Cerrar</button>
