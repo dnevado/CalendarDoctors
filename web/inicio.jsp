@@ -221,9 +221,14 @@ function _FillDataDays()
 
 }
 
-function fSaveDatabase(){
+function fSaveDatabaseOrExcel(Operation){
 	
 	
+	
+	var _page="medico/grabar_guardias.jsp";
+	
+	if (Operation=='excel' || Operation=='excelmail') 
+		_page="toExcel.jsp";
 	
 	var aGuardias = [];
 	
@@ -238,7 +243,7 @@ function fSaveDatabase(){
 	var contador=0;
 	var _Date;
 	
-	$('#loading').modal('show');
+	
 	
 	var _Date = $('#calendar').fullCalendar('getDate');
 	
@@ -300,20 +305,78 @@ function fSaveDatabase(){
 
 		});
 	
+	  var _urlPage ="<%=request.getContextPath()%>/" + _page;
 	
-	
-	  $.ajax({
-          data: {guardias: JSON.stringify(aGuardias), MesGuardia : $('#calendar').fullCalendar('getDate').format("YYYY-MM-DD")}, //stringify is important,
+	  // por ajax parece que no me lo fuerza la descarga
+	  
+	  _paramExcelMail= "0";
+	  if (Operation=='excel')
+	  {
+		  $("#guardias").val(JSON.stringify(aGuardias));
+		  var _Date1 = $('#calendar').fullCalendar('getDate').date(1).format("YYYY-MM-DD");
+		  $("#MesGuardia").val(_Date1);		  		  
+		  $("#ff3").submit();
+		  
+	  }	  
+	  else
+	  {		  
+		  	  
+	  
+	  	var _IdLoadiongDiv = "loading";
+	  	_paramExcelMail= "1";
+	  	if (Operation=='excelmail')
+		  _IdLoadiongDiv = "loadingmail";
+	  
+	  	
+	 			  
+		  
+	   $("#" + _IdLoadiongDiv).modal("show");  
+	   var _Date1 = $('#calendar').fullCalendar('getDate').date(1).format("YYYY-MM-DD");
+	   $.ajax({
+          data: {guardias: JSON.stringify(aGuardias), MesGuardia : _Date1, ByEmail: _paramExcelMail}, //stringify is important,
           type: 'POST',
           dataType: 'JSON',
-          url: '<%=request.getContextPath()%>/medico/grabar_guardias.jsp',
-          success: function(data) {   
-        	  _fn_OrdenarSecuenciaAdjuntos(LastIDADJUNTOPRESENCIA);
-          },
-          error: function(data) {   
-        	  alert("Error:" + data);
+          url: _urlPage,          
+  		 complete: function(data) {	  			 
+  			 if (data.responseText.indexOf("Error")==0)
+  			 {
+  				$("#" + _IdLoadiongDiv).modal("hide");
+  				$('#loaded #loadedtitle').html("Incorrecto");
+  			  	$('#loaded #loadedbody').html(data.responseText);
+  			    $('#loaded').modal("show");
+  			 }	 
+  			 else
+  			 {
+  				if (data.responseText.indexOf("OK")>=0)
+  				{
+  					
+  				$("#" + _IdLoadiongDiv).modal("hide");
+  		  	  	$('#loaded #loadedtitle').html("Correcto");
+  			  	
+  			  	if (Operation!='excelmail')
+  			  	{
+  			  		$('#loaded #loadedbody').html("Los datos han sido almacenados correctamente");
+  			  	   _fn_OrdenarSecuenciaAdjuntos(LastIDADJUNTOPRESENCIA);
+  			  	}	
+  			  	else
+  			  		$('#loaded').modal('show');
+  				}
+  				else  // auth issue
+  						window.location.href='<%=request.getContextPath()%>/login.jsp';
+  			  			 
+  			 }	 
+	  		          	  	          	  
+			},
+          fail: function(data) {   
+        	  alert("error");
+        	/*   $('#loading').modal("hide");
+        	  $('#loaded #loadedtitle').html("Error");
+    		  $('#loaded #loadedbody').html(data.responseText);
+    		  $('#loaded').modal('show'); */
           }
       });
+	  
+	  } // fin de ajax call y frame target
 	
 	
 }
@@ -329,11 +392,12 @@ function fSaveDatabase(){
 	          data: {lastidmedico: IDMEDICO}, //stringify is important,
 	          type: 'POST',	          
 	          url: '<%=request.getContextPath()%>/medico/reordenar_grabar_guardias.jsp',
-	          success: function(data) {   
+	          complete: function(data) {	        	  
 	        	  $('#loading').modal('hide');
 	        	  $('#loaded').modal('show');
 	          },
-	          error: function(data) {   
+	          fail: function(data) {
+	        	
 	        	  alert("Error" + data);
 	          }
 	      });
@@ -415,39 +479,6 @@ function fSaveDatabase(){
 
 	}
 	
-	function  fn_ExcelMail()
-	{
-
-		var _Date = $('#calendar').fullCalendar('getDate').date(1).format("YYYY-MM-DD");		
-		$("#loadingmail").modal("show");
-		 $.ajax({	          
-	          data: {filecontent3: $(".fc table").html(), fechaExcel3 : _Date}, //stringify is important,
-	          type: 'POST',	          
-	          url: '<%=request.getContextPath()%>/toExcelEmail.jsp',
-	          success: function(data) {   
-	        	  $("#loadingmail").modal("hide");
-	        	  $("#loaded").modal("show");
-	        	  
-	          },
-	          error: function(data) {   
-	        	  alert("Error:" + data);
-	          }
-	      });
-
-	}
-	
-	function fn_Excel()
-	{
-		var _Date = $('#calendar').fullCalendar('getDate').date(1).format("YYYY-MM-DD");
-		/* METEMOS EL DIA A 1 */
-		$("#filecontent").val($(".fc table").html());
-		$("#fechaExcel").val(_Date);
-		
-		
-		$("#ff3").submit();
-		
-	
-	}
 	
 
 	function fn_FillMonth(){
@@ -568,11 +599,12 @@ function fSaveDatabase(){
     <div id="page-wrapper">
     <div class="row">
                 <div class="col-lg-12">
-                    <h1 class="page-header">Calendario</h1>
+                    <h1 class="page-header">Calendario </h1>
                 </div>
                  <div class="panel-heading">
                            <div class="row">
-                               <div class="col-xs-10">									        	   	                                                                     
+                               <div class="col-xs-10">	
+                               		<p>(* Recuerda generar el primer mes correcto. No se permite almacenar guardias pasadas.)</p>								        	   	                                                                     
                                    <div id='calendar'></div>
                                    <!--  hay resultados -->
                                    <%  if (request.getParameter("fecha")==null)  {  // se rellena con los huecos o viene de BBDD                                	   
@@ -651,7 +683,7 @@ function fSaveDatabase(){
 				                        <div class="panel-body">				                            
 											<form  id=fSaveDatabase method=post>
 												<input  type="hidden" name="fecha" id=fecha value='2016-09-10'/>
-												<a href="javascript:void(0)"  onclick="fSaveDatabase()">
+												<a href="javascript:void(0)"  onclick="fSaveDatabaseOrExcel('save')">
 												<div class="panel-footer">
 					                                <span class="pull-left">Guardar</span>
 					                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
@@ -676,8 +708,11 @@ function fSaveDatabase(){
 				                        </div>
 				                        <div class="panel-body">				                            
 				                            <form accept-charset="UTF-8" target="frame1" id=ff3 method=post action="toExcel.jsp" enctype="application/x-www-form-urlencoded">
-												<input  type="hidden" name="fechaExcel" id=fechaExcel value='2016-09-10'/>
-												<a href="javascript:fn_Excel()">
+												<!-- <input  type="hidden" name="fechaExcel" id=fechaExcel value='2016-09-10'/>-->
+												<input  type="hidden" name="guardias" id=guardias value='2016-09-10'/>
+												<input  type="hidden" name="MesGuardia" id=MesGuardia value='2016-09-10'/>
+												<!--   <a href="javascript:fn_Excel()">-->
+												<a href="javascript:fSaveDatabaseOrExcel('excel')">												 
 												<div class="panel-footer">
 					                                <span class="pull-left">Descargar</span>
 					                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
@@ -688,8 +723,8 @@ function fSaveDatabase(){
 												<!-- <input  class="ui-button ui-widget ui-corner-all" onclick="fn_Excel()" type="button" value="Descargar Excel"/> -->
 												
 											</form>											
-											
-												<a href="javascript:fn_ExcelMail()">
+												<a href="javascript:fSaveDatabaseOrExcel('excelmail')">
+												<!--  <a href="javascript:fn_ExcelMail()"> -->
 												<div class="panel-footer">
 					                                <span class="pull-left">Enviar Email</span>
 					                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
@@ -761,12 +796,12 @@ function fSaveDatabase(){
 				  <div class="modal-dialog" role="document">
 				    <div class="modal-content">
 				      <div class="modal-header">
-				        <h5 class="modal-title" id="exampleModalLabel">Correcto</h5>
+				        <h5 class="modal-title" id="loadedtitle">Correcto</h5>
 				        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
 				          <span aria-hidden="true">&times;</span>
 				        </button>
 				      </div>
-				      <div class="modal-body">
+				      <div class="modal-body" id="loadedbody">
 				        <span>Los datos han sido almacenados y enviados  correctamente</span>
 				      </div>
 				      <div class="modal-footer">

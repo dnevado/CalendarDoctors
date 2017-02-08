@@ -23,4 +23,8 @@
     <servlet-name>LoginServlet</servlet-name>
     <dispatcher>REQUEST</dispatcher>
   </filter-mapping>
+   <listener>
+        <listener-class>org.quartz.ee.servlet.QuartzInitializerListener</listener-class>
+    </listener>
+  
 </web-app>

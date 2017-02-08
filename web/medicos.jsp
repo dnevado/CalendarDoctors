@@ -73,7 +73,7 @@
                 <div class="col-lg-12">
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                            Listado. Secuencia usada para asignar guardias
+                            Listado. Secuencia usada para asignar guardias. Recuerda que puedes cambiar de secuencia arrastrando un médico arriba/abajo
                         </div>
                         <!-- /.panel-heading -->
                         <div class="panel-body">

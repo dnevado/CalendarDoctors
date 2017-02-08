@@ -169,24 +169,28 @@ public class GuardiasDBImpl {
 	
 	public static  List<Guardias>  getGuardiasEventoGCalendar(String CalId)
 	{
-		return getGuardias(new Long(-1), "", "", new Long(-1),CalId);
+		return getGuardias(new Long(-1), "", "", new Long(-1),CalId, "");
 				
 	}
 	
 	public static  List<Guardias>  getGuardiasMedicoFecha(Long IdMedico, String _FGuardia)
 	{
-		return getGuardias(IdMedico, _FGuardia, "", new Long(-1),"");
+		return getGuardias(IdMedico, _FGuardia, "", new Long(-1),"", "");
 				
 	}
 	public static  List<Guardias>  getGuardiasMedicoFechaTipo(Long IdMedico, String _FGuardia, String _TipoGuardia)
 	{
-		return getGuardias(IdMedico, _FGuardia, _TipoGuardia, new Long(-1),"");
+		return getGuardias(IdMedico, _FGuardia, _TipoGuardia, new Long(-1),"", "");
 				
 	}
+	public static  List<Guardias>  getGuardiasEntreFechas(String _FGuardia, String _FGuardia2)
+	 {
+		 return getGuardias(new Long(-1), _FGuardia,  "", new Long(-1),"",_FGuardia2);
+	 }
 	
 	 public static  List<Guardias>  getGuardiasPorFecha(String _FGuardia)
 	 {
-		 return getGuardias(new Long(-1), _FGuardia,  "", new Long(-1),"");
+		 return getGuardias(new Long(-1), _FGuardia,  "", new Long(-1),"","");
 	 }
 	 
 	 /* HISTORICO 
@@ -195,7 +199,7 @@ public class GuardiasDBImpl {
 	  * */
 	 public static  int  getTotalGuardiasPorMedicoTipo(Long IdMedico, String _TipoGuardia, Long Festivo)
 	 {
-		 return getGuardias(IdMedico, "", _TipoGuardia,Festivo,"").size();
+		 return getGuardias(IdMedico, "", _TipoGuardia,Festivo,"","").size();
 	 }	 
 	 
 	 public static  int  getTotalGuardiasPorMedico_DeSimulados(Long IdMedico,  Long Festivo)
@@ -206,7 +210,7 @@ public class GuardiasDBImpl {
 	 
 	 public static  List<Guardias>  getGuardiasPorMedico(Long IdMedico)
 	 {
-		 return getGuardias(IdMedico, "", "", new Long(-1),"");
+		 return getGuardias(IdMedico, "", "", new Long(-1),"", "");
 	 }	  
 	 
 	 private  static  int  getGuardiasSimulados(Long IdMedico, Long Festivo)
@@ -265,7 +269,7 @@ public class GuardiasDBImpl {
 		  } 
 		 	 
 	
-	 private  static  List<Guardias>  getGuardias(Long IdMedico, String _FGuardia , String _TipoGuardia, Long Festivo, String EventID)
+	 private  static  List<Guardias>  getGuardias(Long IdMedico, String _FGuardia , String _TipoGuardia, Long Festivo, String EventID, String _FGuardiaHasta)
 	 {	  
 		
 		 
@@ -290,7 +294,11 @@ public class GuardiasDBImpl {
 			stSQL+=" AND IdMedico=" + IdMedico;
 		}
 		if (!_FGuardia.equals(""))
-				stSQL+=" and  FGuardia='" + _FGuardia + "'"; 			
+				if (!_FGuardiaHasta.equals(""))
+					stSQL+=" and  FGuardia>='" + _FGuardia + "' and FGuardia<='" + _FGuardiaHasta + "'";
+				else
+					stSQL+=" and  FGuardia='" + _FGuardia + "'";
+		
 		if (!_TipoGuardia.equals(""))		
 			stSQL+=" AND Tipo = '" + _TipoGuardia + "'";
 		

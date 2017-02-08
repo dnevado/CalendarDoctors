@@ -21,8 +21,69 @@
 	
    */
 	String GuardiasJSON = request.getParameter("guardias");
-    String Mes  = request.getParameter("MesGuardia");
+    String Mes  = request.getParameter("MesGuardia");  //MesGuardia:2017-05-01
 	
+    DateFormat _format = new SimpleDateFormat("yyyy-MM-dd");
+    
+    Date dMes = _format.parse(Mes);
+    dMes.setDate(1);
+    
+    
+    /* validacion si el mes anterior y posterior estan rellenos, si no, error */
+    
+    Date  dAnioNMenos1   = dMes;
+    
+    Calendar cal1 = Calendar.getInstance();
+	cal1.setTime(dMes);
+    
+    Calendar cal2 = Calendar.getInstance();
+    cal2.setTime(dMes);
+    
+    /* UN AÑO MENOS */ 
+    
+    cal1.add(Calendar.YEAR, -1);
+    cal2.add(Calendar.MONTH, -1);
+    cal2.add(Calendar.DATE, -1);
+    
+    
+   // Date  dMesMenos1   = dMes.setDate(dMes.getDate()-1);
+        
+   
+    /* VERIFICO QUE HAYA MES ANTERIOR SIEMPRE Y CUANDO NO SEA LA PRIMERA VEZ */  
+    List<Guardias> lGuardiasPrevias= GuardiasDBImpl.getGuardiasEntreFechas(_format.format(cal1.getTime()), _format.format(cal2.getTime()));
+    
+	    
+	cal1.setTime(dMes);      
+    cal2.setTime(dMes);
+    
+    /* UN AÑO MAS */ 
+    cal1.add(Calendar.MONTH, 1);    
+    cal2.add(Calendar.YEAR, 1);
+    
+    List<Guardias> lGuardiasPosteriores= GuardiasDBImpl.getGuardiasEntreFechas(_format.format(cal1.getTime()), _format.format(cal2.getTime()));
+    
+    cal1.setTime(dMes);      
+    cal2.setTime(dMes);
+    
+    /* MES ANTERIOR */ 
+    cal1.add(Calendar.MONTH, -1);        
+    cal2.add(Calendar.DATE, -1);
+    
+    List<Guardias> lGuardiasMesAnterior= GuardiasDBImpl.getGuardiasEntreFechas(_format.format(cal1.getTime()), _format.format(cal2.getTime()));
+    
+    
+    
+
+    /* ERROR CUANDO HAY GUARDIAS POSTERIORES O HAY ANTERIORES Y QUE NO SEAN DEL MES ANTERIOR */
+    if (lGuardiasPosteriores.size()>0 || (lGuardiasPrevias.size()>0 && lGuardiasMesAnterior.size()==0))
+    {
+    	out.println("Error. No se puede continuar, debe generarse la guardia del mes previo y no existir guardias futuras");
+    }
+    else
+    {
+   	
+        	
+    
     Guardias[] lGuardias ;
     		
     Gson gson = new GsonBuilder().create();
@@ -33,7 +94,7 @@
     /* CUANDO ACABE, ENVIAMOS MAIL , SI ESTA CONFIGURADO ASI */
 	String _CalendarioGoogle = ConfigurationDBImpl.GetConfiguration(Util.getoCALENDARIO_GMAIL()).getValue();
 	String _CalendarioMinutosRecordatorio = ConfigurationDBImpl.GetConfiguration(Util.getoCONST_CALENDARIO_MINUTOS_RECORDATORIO()).getValue();
-	DateFormat _format = new SimpleDateFormat("yyyy-MM-dd");
+	
 	CalendarEventUtil _calendarUtil = null;
 	if (_CalendarioGoogle.equals("S"))
 	{
@@ -149,9 +210,8 @@
         	}
     	
 	}
-	out.println(lGuardias.length);	
-	
-	
+	out.println("OK");	
+    } //  end of 	if (lMesAnterior.size()==0 || lMesPosterior.size()>0)
 		
 	
 	

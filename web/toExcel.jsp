@@ -1,85 +1,122 @@
 
 
-<%@ page language="java" import="java.io.*" %> 
+<%@ page language="java" import="java.io.*" %>
+<%@ page language="java" import="com.guardias.excel.*" %>
+<%@ page language="java" import="java.text.SimpleDateFormat" %>
+<%@ page language="java" import="java.text.DateFormat" %>
+<%@ page language="java" import="java.util.Calendar" %>
+<%@page import="com.guardias.database.MedicoDBImpl"%>
+<%@page import="com.guardias.ProcesarMedicos"%>
+<%@page import="com.guardias.*"%>
+<%@page import="com.guardias.Util"%>
+<%@page import="java.util.*"%>
+
 <% 
 
+  String GuardiasJSON = request.getParameter("guardias");
+
+  boolean ByEmail  = false;
+  
+  if (request.getParameter("ByEmail")!=null && request.getParameter("ByEmail").equals("1"))
+  		ByEmail  = true;
+  
+
   String _excel = (String) request.getParameter("filecontent");
-  String _Date = (String) request.getParameter("fechaExcel");
-
-  response.setContentType("application/vnd.ms-excel charset=ISO-8859-1"); 
-  response.setHeader("Content-Disposition","inline;filename=" + _Date+".xls"); 
-  response.setHeader("Cache-Control","no-cache"); 
-  response.setCharacterEncoding("UTF-8");
-
+  String _Date = (String) request.getParameter("MesGuardia");
   
-  /* SUSTITUIMOS CLASS POR STYLE EN LINEA */
+  DateFormat _format = new SimpleDateFormat("yyyy-MM-dd");
   
-  String[] _CONST_STRING_ORIGINAL =  {"class=\"fc-event-container","class=\"orden3 adjunto presencia \"","class=\"orden2 adjunto refuerzo \"","class=\"orden1  residente \"","class=\"orden2 adjunto localizada \"","class=\"orden3 adjunto presencia festivoc\"","class=\"orden2 adjunto refuerzo festivoc\"","class=\"orden1  residente festivoc\"","class=\"orden2 adjunto localizada festivoc\""};
-  String[] _CONST_STRING_REPLACEBY = {"style=\"background-color: #f1be76\" class=\"fc-event-container","style=\" color: #c77405;\"  class=\"orden3 presencia","style=\" color: #1c94c4;\"  class=\"orden2 refuerzo ","style=\"color: #d9534f;\"  class=\"orden1  residente \"","style=\" color: #1A6B1D;\"  class=\"orden2 adjunto localizada \"","style=\" color: #c77405;background-color: #c1bfb4;\"  class=\"orden3 adjunto presencia festivoc\"","style=\" color: #1c94c4;background-color: #c1bfb4;\"  class=\"orden2 adjunto refuerzo festivoc\"","style=\" color: #d9534f;background-color: #c1bfb4;\"  class=\"orden1  residente festivoc\"","style=\" color: #1A6B1D;background-color: #c1bfb4;\" class=\"orden2 adjunto localizada festivoc\""};
+  java.util.Date cDate = _format.parse(_Date);
   
+  Calendar caled = Calendar.getInstance();
+  caled.setTime(cDate);
+  //cDate
   
+  CalendarToExcel cE = new CalendarToExcel();
   
-  /*  
- class="fc-day-header	
-style="background-color:#cecece" class="fc-day-header
+  CalendarToExcel.GenerateExcel(System.getProperty("java.io.tmpdir") + _Date+".xlsx",caled ,GuardiasJSON);
 
-class="fc-event-container
-style="background-color: #f1be76" class="fc-event-container
-
-class="orden3 presencia
-style=" color: #c77405;"  class="orden3 presencia
-
-class="orden2 refuerzo 
-style=" color: #1c94c4;"  class="orden2 refuerzo 
-
-class="orden1 residente "
-style="color: #d9534f;"  class="orden1 residente "
-
-class="orden2 localizada
-style=" color: #1A6B1D;"  class="orden2 localizada
-
-class="orden3 adjunto presencia festivoc"
-style=" color: #c77405;background-color: #c1bfb4;"  class="orden3 adjunto presencia festivoc"
-
-class="orden2 adjunto refuerzo festivoc"
-style=" color: #1c94c4;background-color: #c1bfb4;"  class="orden2 adjunto refuerzo festivoc"
-
-class="orden1  residente festivoc"
-style=" color: #d9534f;background-color: #c1bfb4;"  class="orden1  residente festivoc"
-
-class="orden2 adjunto localizada festivoc"
-style=" color: #1A6B1D;background-color: #c1bfb4;"  class="orden2 adjunto localizada festivoc"
-  */
+  //response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  
   
 
-
-	/* RECORREMOS AL REVES PARA QUE NO HAYA REPLACES DOBLES, P.E.  class="orden2 adjunto refuerzo festivoc" class="orden2 refuerzo  */
-	//for (int j=0;j<_CONST_STRING_ORIGINAL.length;j++)
-	for (int i=_CONST_STRING_ORIGINAL.length-1; i > 0; i--)
-
-	{
-		_excel = _excel.replaceAll(_CONST_STRING_ORIGINAL[i], _CONST_STRING_REPLACEBY[i]);
-	}
-
-	OutputStream outputStream = response.getOutputStream();
+  //response.setHeader("Content-Disposition","attachment; filename=\"SIPInvestment_531.xls\"");                           
+  
+  
+  if (!ByEmail)
+  {
+	  
+  
+  
+	  response.setContentType("application/vnd.ms-excel charset=ISO-8859-1");
+	  response.setHeader("Content-Disposition","attachment;filename=" + _Date+".xlsx"); 
+	  response.setHeader("Cache-Control","no-cache");
+	  response.setHeader("Content-Transfer-Encoding","binary");    
+	  response.setCharacterEncoding("UTF-8");
 	
-	// now get a PrintWriter to stream the chars.
-	PrintWriter out2 = new PrintWriter(new OutputStreamWriter(outputStream,"ISO-8859-1"));
-	outputStream.write(0xEF);   // 1st byte of BOM
-	outputStream.write(0xBB);
-	outputStream.write(0xBF);   // last byte of BOM
-	
-	
-	try 
-	{
-		out2.print(_excel);
-		out2.close();	
-	}
-	catch (Exception e)
-	{
-		
-	}
-	
+	  
+	  
+	  	FileInputStream  inputStream = new FileInputStream(new File(System.getProperty("java.io.tmpdir") + _Date+".xlsx"));
+	  	
+	  	
+	  	
+	  	try
+	  	{
+	  		ServletOutputStream outputStream = response.getOutputStream();
+	  		//OutputStream outputStream = response.getOutputStream();
+	  	  	 int line;
+	  	     //StringBuilder sb = new StringBuilder();
+	  	     while ((line = inputStream.read()) != -1) {
+	  	         //sb.append(line);
+	  	         outputStream.write(line);
+	  	     }
+	  	     inputStream.close();
+	  	     outputStream.flush();
+	  	     outputStream.close();	
+	  	     
+	  	     // intentamos borrarlo
+	  	     File _TmpExcel = new File(System.getProperty("java.io.tmpdir") + _Date+".xlsx");
+	  	     if (_TmpExcel.canWrite() && _TmpExcel.exists())
+	  	    	_TmpExcel.delete();
+	  	}
+	  	catch (Exception e)
+	  	{
+	  	}
+  }
+  
+  else // por email
+  {
+	  	List<Medico> lMedicos = MedicoDBImpl.getMedicos();
+		List<String> lMails = new ArrayList();
+			
+	    for (Medico  oMedico :lMedicos)
+	    {
+	    	if (oMedico.isActivo())
+	    		
+	    		lMails.add(oMedico.getEmail());
+	    	
+	    }
+	    String[] aMails = lMails.toArray(new String[lMails.size()]);        
+	     
+	    try 
+	    {
+
+	    	Util.sendFromGMail(aMails, Util.MAIL_SUBJECT + _Date, Util.MAIL_BODY + _Date, System.getProperty("java.io.tmpdir") + _Date+".xlsx", _Date+".xlsx");
+			
+		    // intentamos borrarlo
+	 	     File _TmpExcel = new File(System.getProperty("java.io.tmpdir") + _Date+".xlsx");
+	 	     if (_TmpExcel.canWrite() && _TmpExcel.exists())
+	 	    	_TmpExcel.delete();
+	    }
+	    
+ 	     
+		 catch (Exception e)
+		{
+			System.out.println (e.getMessage());
+			
+		}
+  }
+	  		
   
 
    

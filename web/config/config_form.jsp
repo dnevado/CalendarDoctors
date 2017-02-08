@@ -35,6 +35,17 @@ function fn_EnableMoreData(){
 	Long max_dias_seguidos_residentes =  Long.parseLong(request.getParameter("max_dias_seguidos_residentes"));
 	Long max_diferencia_entre_simulados_de_adjuntos =  Long.parseLong(request.getParameter("max_diferencia_entre_simulados_de_adjuntos"));
 	
+	String  gserviceaccount =  request.getParameter("gserviceaccount");
+	
+	
+	String   emailfrom =  request.getParameter("emailfrom");
+	String   emailfrompwd =  request.getParameter("emailfrompwd");
+	
+	Long minutosrecordatorio =  Long.parseLong(request.getParameter("minutosrecordatorio"));
+	
+	
+	
+	
 	
 	
 	String calendario ="N";  
@@ -65,6 +76,24 @@ function fn_EnableMoreData(){
 	_oConfiguracion.setValue(calendario);	
 	ConfigurationDBImpl.UpdateConfiguracion(_oConfiguracion);
 	
+	_oConfiguracion.setKey(Util.getoCONST_CALENDARIO_MINUTOS_RECORDATORIO());
+	_oConfiguracion.setValue(minutosrecordatorio.toString());	
+	ConfigurationDBImpl.UpdateConfiguracion(_oConfiguracion);
+	
+	_oConfiguracion.setKey(Util.getoCONST__SERVICE_CALENDAR());
+	_oConfiguracion.setValue(gserviceaccount);	
+	ConfigurationDBImpl.UpdateConfiguracion(_oConfiguracion);
+	
+	_oConfiguracion.setKey(Util.getoCONST_MAIL_FROM());
+	_oConfiguracion.setValue(emailfrom);	
+	ConfigurationDBImpl.UpdateConfiguracion(_oConfiguracion);
+	
+	_oConfiguracion.setKey(Util.getoCONST_MAIL_FROM_PASSWORD());
+	_oConfiguracion.setValue(emailfrompwd);	
+	ConfigurationDBImpl.UpdateConfiguracion(_oConfiguracion);
+	
+	
+	
 	
 }
 
@@ -75,6 +104,14 @@ function fn_EnableMoreData(){
 	Configuracion oCONST_MAXIMAS_ITERACIONES_PERMITIDAS = ConfigurationDBImpl.GetConfiguration(Util.getoCONST_MAXIMAS_ITERACIONES_PERMITIDAS());
 	Configuracion oCALENDARIO_GMAIL = ConfigurationDBImpl.GetConfiguration(Util.getoCALENDARIO_GMAIL());	
 	//Configuracion oDATABASE_PATH = ConfigurationDBImpl.GetConfiguration(Util.oDATABASE_PATH);
+	Configuracion oGOOGLE_OAUTH = ConfigurationDBImpl.GetConfiguration(Util.getoCONST_GOOGLE_SERVICE_ACCOUNT());
+	Configuracion oGOOGLE_CALENDAR_RECORDATORIO = ConfigurationDBImpl.GetConfiguration(Util.getoCONST_CALENDARIO_MINUTOS_RECORDATORIO());
+	
+	Configuracion oMAILFROM = ConfigurationDBImpl.GetConfiguration(Util.getoCONST_MAIL_FROM());
+	Configuracion oMAILFROM_PWD = ConfigurationDBImpl.GetConfiguration(Util.getoCONST_MAIL_FROM_PASSWORD());
+	
+	//Configuracion oGOOGLE_AUTH_P12 = ConfigurationDBImpl.GetConfiguration(Util.getoCONST_CALENDARIO_FICHERO_P12_RUTA());
+	
 
 
 
@@ -94,7 +131,7 @@ function fn_EnableMoreData(){
 <!--  SUCCESS -->            
 <div class="form-group">
 <label  class="control-label"> Máximas iteraciones (En caso de embuclarse por condiciones, detectar y salir)</label>
-<input maxlength="6"  required class="ui-textfield form-control" type="number" name="maxiteraciones" id="maxiteraciones"  value='<%=oCONST_MAXIMAS_ITERACIONES_PERMITIDAS.getValue() %>'/>
+<input maxlength="6"  required class="ui-textfield form-control" type="number" name="maxiteraciones" id="maxiteraciones"  value="<%=oCONST_MAXIMAS_ITERACIONES_PERMITIDAS.getValue() %>"/>
 </div>						
 <div class="form-group">
 <label  class="control-label">Ruta/_Name Base Datos SqlLite </label>
@@ -117,16 +154,24 @@ function fn_EnableMoreData(){
 <input   class="form-control"  type="checkbox" onchange="fn_EnableMoreData()" name="calendario" id="calendario"  value="S" <%=(oCALENDARIO_GMAIL.getValue().equals("S") ? "checked" : "")%>/>
 </div>
 <div id="datoscalendario1" class="form-group">
+<label  class="control-label">Email From</label>
+<input  maxlength="250"  class="ui-textfield form-control" type="text" name="emailfrom" id="emailfrom"  value='<%=oMAILFROM.getValue() %>'/>
+</div>
+<div id="datoscalendario1" class="form-group">
+<label  class="control-label">Email From Password</label>
+<input  maxlength="250"  class="ui-textfield form-control" type="password" name="emailfrompwd" id="emailfrompwd"  value='<%=oMAILFROM_PWD.getValue() %>'/>
+</div>
+<div id="datoscalendario1" class="form-group">
 <label  class="control-label">Service Account Google Name (oAuth2 autenticación)</label>
-<input  maxlength="250"  class="ui-textfield form-control" type="text" name="gserviceaccount" id="gserviceaccount"  value=''/>
+<input  maxlength="250"  required class="ui-textfield form-control" type="text" name="gserviceaccount" id="gserviceaccount"  value='<%=oGOOGLE_OAUTH.getValue() %>'/>
 </div>
 <div id="datoscalendario2" class="form-group">
 <label  class="control-label">Enviar Recordatorio Calendario (Número de minutos antes de que ocurra,0 no se envían)</label>
-<input maxlength="6"  required class="ui-textfield form-control" type="number" name="minutosrecordatorio" id="minutosrecordatorio"  value='0'/>
+<input maxlength="6"  required class="ui-textfield form-control" type="number" name="minutosrecordatorio" id="minutosrecordatorio"  value='<%=oGOOGLE_CALENDAR_RECORDATORIO.getValue()%>'/>
 </div>
 <div id="datoscalendario3" class="form-group">
 <label  class="control-label">Ruta Fichero Clave Pública/Privada P12</label>
-<input  maxlength="400"  class="ui-textfield form-control" type="text" name="ficherop12" id="ficherop12"  value=''/>
+<input  disabled="disabled" maxlength="400"  class="ui-textfield form-control" type="text" name="ficherop12" id="ficherop12"  value='<%=System.getProperty("catalina.home") %>)\GOOGLE_p12_auth\Guardias-a1592342c053.p12'/>
 </div>
 
 <input type="hidden" name="saving"  value='1'/>

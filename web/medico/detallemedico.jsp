@@ -69,7 +69,7 @@ function getday(dateText, inst) {
 
 function date_(){
 	
-	$("#vacaciones").multiDatesPicker( {dateFormat: "yy-mm-dd",  minDate: "-1M", maxDate: "+2M",
+	$("#vacaciones").multiDatesPicker( {dateFormat: "yy-mm-dd",  minDate: "-1M", maxDate: "+4M",
 	    // Primer dia de la semana El lunes
 	    firstDay: 1,
 	    // Dias Largo en castellano
@@ -143,10 +143,15 @@ function _GuardarMedico()
 		  data: obj,
 		  success: function(data) {
 			  
-			//  $("#success").html("Los datos han sido guardados correctamente");
-			  $("#success").show();
-			  //alert($("#success").val());
-		   }
+			  if (data.responseText.indexOf("OK")>=0)			  		
+			  	$("#success").show();
+			  else
+				  // auth issue
+				  window.location.href='<%=request.getContextPath()%>/login.jsp';
+		   },
+		   error: function(data) {				  				  
+				  alert(data);
+			   }
 		});
 }
 

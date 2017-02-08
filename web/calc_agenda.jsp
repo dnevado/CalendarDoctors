@@ -664,12 +664,19 @@ cGuardiaDia.setTimeInMillis(_cINI.getTimeInMillis());
 
 int MONTH_ACTIVE = cGuardiaDia.get(Calendar.MONTH);
 
+int n= 1;
 for (int j=1;j<=NUM_SEMANAS_MES;j++)
 {
 	
 	
 	// aleatatorio de los dias diarios  Y FESTIVOS
-	List<Long> lDiasDSemanaAleatorio = ProcesarMedicos.ListaDiasSemanaAleatoria(cWeek, lFestivos, Util.eTipoDia.DIARIO, MONTH_ACTIVE);
+	// 2017 se solucionaria si establecisesemos los dias en funcion de los adjuntos en orden de mas simulados a menos , solo para los diarios */
+	//List<Long> lDiasDSemanaAleatorio = ProcesarMedicos.ListaDiasSemanaAleatoria(cWeek, lFestivos, Util.eTipoDia.DIARIO, MONTH_ACTIVE);
+	
+	
+	 /* COGEMOS LOS DIAS SEGUN ORDEN ASCENDENTE DE ADJUNTOS CON MAS SIMULADOS , ASI SE VAN ASIGNANDO A LOS RESIDENTES */
+	List<Long> lDiasDSemanaAleatorio = ProcesarMedicos.ListaDiasSemanaPorOrdenMenorSimulados(cWeek, lFestivos, Util.eTipoDia.DIARIO, MONTH_ACTIVE,lMedicosGuardias,_lAdjuntos);
+	
 	List<Long> lDiasFSemanaAleatorio = ProcesarMedicos.ListaDiasSemanaAleatoria(cWeek, lFestivos, Util.eTipoDia.FESTIVO, MONTH_ACTIVE);
 	
 	// Generamos un LinkedHashMap  uniendo ambas estructuras, día y si es festivo, por orden 
@@ -681,31 +688,40 @@ for (int j=1;j<=NUM_SEMANAS_MES;j++)
 	
 	
 	// recoremos los dias 	
+	
+	//System.out.println("_mapDiasSemana:" + _mapDiasSemana.entrySet().size());
+	
     for (Map.Entry<Long,Util.eTipoDia> DiaSemana : _mapDiasSemana.entrySet())
 	{
+	
+    	
+    	//System.out.println("valorn:" + n);
+		Long DIASEMANAMES= new Long(DiaSemana.getKey());		
 		
-		Long DIASEMANA= DiaSemana.getKey();		
+		
+		
+		//System.out.println("1Dia:" + DIASEMANA);
 		Util.eTipoDia _TIPODIA = DiaSemana.getValue();
 		
-		System.out.println("_TIPODIA:" + _TIPODIA);
-		cGuardiaDia.set(Calendar.DATE, DIASEMANA.intValue());
+		//System.out.println("_TIPODIA:" + _TIPODIA);
+		cGuardiaDia.set(Calendar.DATE, DIASEMANAMES.intValue());
 		
-		boolean bExisteMedicoConGuardiaSolo = ProcesarMedicos.ExisteMedicoConGuardiaSolo_EnElMes(lMedicosGuardias, _lAdjuntos,DIASEMANA);
+		boolean bExisteMedicoConGuardiaSolo = ProcesarMedicos.ExisteMedicoConGuardiaSolo_EnElMes(lMedicosGuardias, _lAdjuntos,DIASEMANAMES);
 		
-		if (!_lPoolDAYS.contains(DIASEMANA) && !bExisteMedicoConGuardiaSolo)
+		if (!_lPoolDAYS.contains(DIASEMANAMES) && !bExisteMedicoConGuardiaSolo)
 		{
 		
 			Random rand = new Random();
 			
 			int value = rand.nextInt(_lResidentes.size());  // integer entre 0 y size -1		
 			
-			System.out.println("Random Residentes:" + value);
+			//System.out.println("Random Residentes:" + value);    
 			
 			bEncontrado = false;			
 			Medico oM = null;			
 			Medico _oAdjunto = null;
 			
-			Long AdjuntoIDPresenciaDia = new Long(-1);
+			//Long AdjuntoIDPresenciaDia = new Long(-1);
 			List<Long> _ListaIDMedicosVerificados = new ArrayList<Long>();
 			
 			boolean IgnorarMenorNumeroGuardias = false;  // cuando el que menos ha hecho guardias le toque esta asignacion (p.e. festivo)  pero ha trabajado el dia anterior 
@@ -730,7 +746,42 @@ for (int j=1;j<=NUM_SEMANAS_MES;j++)
 			boolean bAsignadosResidentesSemana = false;
 			boolean AllMedicosVerificados = false;  // si todos los medicos están verificados, se los asigno a simulado
 			
-			boolean SimuladoYaVerificado=false;  // para que no asigne residentes de primera 
+			boolean SimuladoYaVerificado=false;  // para que no asigne residentes de primera
+			
+			
+			_EsFestivo = _TIPODIA.equals(Util.eTipoDia.FESTIVO);
+			
+			
+			int _DIAS_SEMANA_EN_CURSO = 0;						 
+			int _NUM_SIMULADOS_ACTUALES_SEMANA = 0;
+			int _NUM_RESIDENTES_ACTUALES_SEMANA = 0;
+			
+			 
+			 _NUM_RESIDENTES_ACTUALES_SEMANA = ProcesarMedicos.NumeroResidentesSemana(cGuardiaDia, lMedicosGuardias,false, MONTH_ACTIVE);  
+			
+			 if (_RESIDENTES_SEMANA<=_NUM_RESIDENTES_ACTUALES_SEMANA)
+				 bAsignadosResidentesSemana =  true; // ya estan asignados ya que hay menos dias de los que exige 
+			 else
+			 {	 
+				 bAsignadosResidentesSemana =  false;
+			 	/* if ( _NUM_RESIDENTES_ACTUALES_SEMANA < _RESIDENTES_SEMANA)				 
+			 		bAsignadosResidentesSemana =  false;
+			 	else
+			 		bAsignadosResidentesSemana =  true;
+			 	*/
+			 }
+			 
+				
+			Long  IDAdjuntoGuardiaDia = ProcesarMedicos.getMedicoGuardiaDia(j, lMedicosGuardias, Util.eTipo.ADJUNTO, _lAdjuntos); 
+			 
+		    /*  TESTING 			
+		    List<Long> ListAdjuntoConMenosSimulados = ProcesarMedicos.ListAdjuntoConMenosSimulados(lMedicosGuardias, _lAdjuntos, DIASEMANAMES.intValue(), _EsFestivo);
+		    bAdjuntoConMenosSimulados = ListAdjuntoConMenosSimulados.contains(IDAdjuntoGuardiaDia);
+		    */
+		    
+		    /* FIN TESTING */ 
+			 
+			
 			while (!bEncontrado) 
 			{
 				
@@ -761,9 +812,7 @@ for (int j=1;j<=NUM_SEMANAS_MES;j++)
 				
 				//	bAsignadosSimuladosSemana = true;
 				
-				int _DIAS_SEMANA_EN_CURSO = 0;						 
-				int _NUM_SIMULADOS_ACTUALES_SEMANA = 0;
-				int _NUM_RESIDENTES_ACTUALES_SEMANA = 0;
+			
 				
 				AllMedicosVerificados = false;  // si todos los medicos están verificados, se los asigno a simulado
 				
@@ -792,7 +841,7 @@ for (int j=1;j<=NUM_SEMANAS_MES;j++)
 						ExcedeLimiteGuardiasMes = true;
 					 }				 
 					 // verificamos dias anteriores
-					 _GuardiasPreviasSeguidas = ProcesarMedicos.getDiasPreviosConGuardiasSeguidos(DIASEMANA.intValue(), _lDatosTemp,_daysOfMonth);
+					 _GuardiasPreviasSeguidas = ProcesarMedicos.getDiasPreviosConGuardiasSeguidos(DIASEMANAMES.intValue(), _lDatosTemp,_daysOfMonth);
 					 
 					 Long MAX_NUMERO_DIAS_SEGUIDOS_RESIDENTESS = Long.parseLong(ConfigurationDBImpl.GetConfiguration(Util.getoCONST_MAX_NUMERO_DIAS_SEGUIDOS_RESIDENTESS()).getValue());
 					 //System.out.println(Util.CONST_MAX_NUMERO_DIAS_SEGUIDOS_RESIDENTES  + "," + _GuardiasPreviasSeguidas);
@@ -801,7 +850,7 @@ for (int j=1;j<=NUM_SEMANAS_MES;j++)
 						 ExcedeHorasSeguidas = true;
 					 }
 					 /* TIENE EL MEDICO ASIGNADO EL POOL EL DIA J+1*/
-					 if (_lDatosTemp.containsKey(new Long(DIASEMANA+1)) && _lDatosTemp.get(new Long(DIASEMANA+1)).equals("POOLDAY"))
+					 if (_lDatosTemp.containsKey(new Long(DIASEMANAMES+1)) && _lDatosTemp.get(new Long(DIASEMANAMES+1)).equals("POOLDAY"))
 					 {
 						 	TienePoolDayAsignadoDiaSgte =true;
 					 }
@@ -814,83 +863,65 @@ for (int j=1;j<=NUM_SEMANAS_MES;j++)
 				}   // fin de calculo de medico aleatorio
 				
 				
-				_EsFestivo = _TIPODIA.equals(Util.eTipoDia.FESTIVO);
-				 
-				 _NUM_RESIDENTES_ACTUALES_SEMANA = ProcesarMedicos.NumeroResidentesSemana(cGuardiaDia, lMedicosGuardias,false, MONTH_ACTIVE);  
 				
-				 if (_RESIDENTES_SEMANA<=_NUM_RESIDENTES_ACTUALES_SEMANA)
-					 bAsignadosResidentesSemana =  true; // ya estan asignados ya que hay menos dias de los que exige 
-				 else
-				 {	 
-					 bAsignadosResidentesSemana =  false;
-				 	/* if ( _NUM_RESIDENTES_ACTUALES_SEMANA < _RESIDENTES_SEMANA)				 
-				 		bAsignadosResidentesSemana =  false;
-				 	else
-				 		bAsignadosResidentesSemana =  true;
-				 	*/
-				 }
 					  
 				EsResidenteConMenosFestivos = true;
 				if (_EsFestivo)
 				{ 
 					   //	ResidenteConMenosFestivos  = ProcesarMedicos.ResidenteMenosFestivosyNoExcedeDelTotal(lMedicosGuardias, _lResidentes, _DATE,j);
 					 	/* PUEDE DARSE QUE EL RESIDENTE CON MENOS FESTIVOS HAYA TRABAJADO EL VIERNES, CON LO QUE NO SE LE PUEDE ASIGNAR EL SABADO Y ENTRA EN BUCLE */
-					 	ResidenteConMenosFestivos  = ProcesarMedicos.ResidenteMenosGuardiasyNoExcedeDelTotal(lMedicosGuardias, _lResidentes, _DATE, DIASEMANA.intValue(), _daysOfMonth);
+					 	ResidenteConMenosFestivos  = ProcesarMedicos.ResidenteMenosGuardiasyNoExcedeDelTotal(lMedicosGuardias, _lResidentes, _DATE, DIASEMANAMES.intValue(), _daysOfMonth);
 					 	EsResidenteConMenosFestivos = oM.getID().equals(ResidenteConMenosFestivos);  
 					 	
 					 						 						
 				}
 				 // simulado y ya tengo los festivos rellenos, verifico el simulado
+				
+				 
 				if (oM.isResidenteSimulado())
 				 {
-					 if (AllMedicosVerificados)  bEncontrado =true;
-					 else
-					 {
-		 				 
-						 // GUARDIAS TOTALES 				  
-						    
-						//PRESENCIA 
-						 Long  IDAdjuntoGuardiaDia = ProcesarMedicos.getMedicoGuardiaDia(j, lMedicosGuardias, Util.eTipo.ADJUNTO, _lAdjuntos);
+					 if (AllMedicosVerificados) 
+						 	bEncontrado =true;
+					  else
+					  				
+						  if (!_ListaIDMedicosVerificados.contains(oM.getID()))
+								_ListaIDMedicosVerificados.add(oM.getID());
 						
-						
-						
-						 Util.eTipoGuardia _TipoGuardiaAdjunto = Util.eTipoGuardia.SIMULADO; // SOLO PARA LOS ADJUNTOS CON UN SIMULADO 
-							 				 				
-						 String _Key = "_TOTAL_" + _TipoGuardiaAdjunto.toString() + "_DIARIO_MES";
-						 if (_EsFestivo)  _Key = _Key.concat("_FESTIVOS");				 
-						 	_Key = "_TOTAL_" + _TipoGuardiaAdjunto.toString() + "_FESTIVOS_MES";
-						 Long AdjuntoConMenosGuardias = ProcesarMedicos.AdjuntoMenosGuardiasYHorasSeguidas(true, _TipoGuardiaAdjunto, _Key, lMedicosGuardias, _lAdjuntos, IDAdjuntoGuardiaDia,DIASEMANA.intValue(), _daysOfMonth);
-						 bAdjuntoConMenosSimulados = AdjuntoConMenosGuardias.equals(oM.getID());
-						
-						 // ANTE EL DILEMA bAdjuntoConMenosSimulados &&
-						 // SI EL DIA ES EL QUE MENOS SIMULADOS TIENE,
-						 /* 2017-23-01 */
-						if  (!bAsignadosResidentesSemana && bAdjuntoConMenosSimulados &&  !ExcedeLimiteGuardiasMes && !ExcedeHorasSeguidas) // no cumpla las condiciones
+					/*	 
+						if  (bAdjuntoConMenosSimulados &&  !_EsFestivo &&  !ExcedeLimiteGuardiasMes && !ExcedeHorasSeguidas) // no cumpla las condiciones, evitamos festivos 
 						{						
 								bEncontrado =true;
 						}					
 						else  // lo metemos en la lista de verificacion																	
 							if (!_ListaIDMedicosVerificados.contains(oM.getID()))
 								_ListaIDMedicosVerificados.add(oM.getID());
-					 }
+					 }*/
 				 }
 				 else  // residente, si están todos ya rellenos a nivel de semana, dejamos hueco al simulado
-				   /* 2017-23-01 */
-				 	if (!bAsignadosResidentesSemana  && !bAdjuntoConMenosSimulados && NoTieneVacaciones && !ExcedeLimiteGuardiasMes && !ExcedeHorasSeguidas 
+				   /* 2017-23-01 */ 
+				   /*&& !bAdjuntoConMenosSimulados */
+				   { 
+					 	if (!bAsignadosResidentesSemana   && NoTieneVacaciones && !ExcedeLimiteGuardiasMes && !ExcedeHorasSeguidas 
 							&& !TienePoolDayAsignadoDiaSgte && (!_EsFestivo || (_EsFestivo &&   EsResidenteConMenosFestivos)))
 								bEncontrado =true;
-				 	else
-				 		if (!_ListaIDMedicosVerificados.contains(oM.getID()))
-							_ListaIDMedicosVerificados.add(oM.getID());
-				 
+				 		else
+				 			if (!_ListaIDMedicosVerificados.contains(oM.getID()))
+								_ListaIDMedicosVerificados.add(oM.getID());
+				   }
 				Random r = new Random();			
 				value = r.nextInt(_lResidentes.size());  // integer entre 0 y size -1
 				//System.out.println("Bucle residentes, aleatorio entre 0 y " + _lResidentes.size() + ":" + value);
 				
 				
-				System.out.println("Dia:" + DIASEMANA + "Residente:" + oM.getApellidos() +  oM.getID() + "," + ",ResidenteConMenosFestivos:" + ResidenteConMenosFestivos + ",AllMedicosVerificados:" + AllMedicosVerificados + ",bAsignadosResidentesSemana:" + bAsignadosResidentesSemana + "TotalGuardias:" + (_lDatosTemp!=null ?_lDatosTemp.get("_NUMERO_GUARDIAS_" + Util.eTipo.RESIDENTE + "_MES") : 0) + ",Festivos:" + (_lDatosTemp!=null ? _lDatosTemp.get("_TOTAL_GUARDIAS_RESIDENTE_FESTIVO"):0));
+			//	System.out.println("Dia:" + TEMP + "Residente:" + oM.getApellidos() +  oM.getID() + "," + ",ResidenteConMenosFestivos:" + ResidenteConMenosFestivos + ",AllMedicosVerificados:" + AllMedicosVerificados + ",bAsignadosResidentesSemana:" + bAsignadosResidentesSemana + "TotalGuardias:" + (_lDatosTemp!=null ?_lDatosTemp.get("_NUMERO_GUARDIAS_" + Util.eTipo.RESIDENTE + "_MES") : 0) + ",Festivos:" + (_lDatosTemp!=null ? _lDatosTemp.get("_TOTAL_GUARDIAS_RESIDENTE_FESTIVO"):0));
+			
+				//System.out.println("bEncontrado:" + bEncontrado + ",dia:" +  DIASEMANAMES);
 				
-			}  // fin de encontrado 
+			}  // fin de encontrado
+			
+			
+			n++;
+			
 			Hashtable _lDatosGuardiasMedico=null;
 			
 			if (!lMedicosGuardias.containsKey(oM.getID()))
@@ -908,7 +939,7 @@ for (int j=1;j<=NUM_SEMANAS_MES;j++)
 				_lDatosGuardiasMedico = (Hashtable) lMedicosGuardias.get(oM.getID());
 			
 			/* PONEMOS EL DIA */
-			_lDatosGuardiasMedico.put(DIASEMANA, "NOPOOLDAY");  // redundate, dia key , dia value
+			_lDatosGuardiasMedico.put(DIASEMANAMES, "NOPOOLDAY");  // redundate, dia key , dia value
 			
 			/* if  (!_lDatosGuardiasMedico.containsKey("_NUMERO_GUARDIAS_RESIDENTE_MES"))
 				_lDatosGuardiasMedico.put("_NUMERO_GUARDIAS_RESIDENTE_MES",1);  // la primera
@@ -927,9 +958,9 @@ for (int j=1;j<=NUM_SEMANAS_MES;j++)
 			{
 				Hashtable _lDatosGuardiasAdjunto=null;
 				
-				if (lMedicosGuardias.containsKey(AdjuntoIDPresenciaDia))
+				if (lMedicosGuardias.containsKey(IDAdjuntoGuardiaDia))
 				{
-					_lDatosGuardiasAdjunto = (Hashtable) lMedicosGuardias.get(AdjuntoIDPresenciaDia);
+					_lDatosGuardiasAdjunto = (Hashtable) lMedicosGuardias.get(IDAdjuntoGuardiaDia);
 					String _Key =  "_TOTAL_" + Util.eSubtipoResidente.SIMULADO.toString() + "_DIARIO_MES"; 
 					if (_EsFestivo)
 						_Key =  "_TOTAL_" + Util.eSubtipoResidente.SIMULADO.toString() + "_FESTIVOS_MES";
@@ -941,16 +972,18 @@ for (int j=1;j<=NUM_SEMANAS_MES;j++)
 						
 			}
 			
-			System.out.println("Dia:" + DIASEMANA + "TotalGuardias:" + _lDatosGuardiasMedico.get("_NUMERO_GUARDIAS_" + Util.eTipo.RESIDENTE + "_MES") + ",Festivos:" + _lDatosGuardiasMedico.get("_TOTAL_GUARDIAS_RESIDENTE_FESTIVO"));
+			//System.out.println("Dia:" + DIASEMANAMES + "TotalGuardias:" + _lDatosGuardiasMedico.get("_NUMERO_GUARDIAS_" + Util.eTipo.RESIDENTE + "_MES") + ",Festivos:" + _lDatosGuardiasMedico.get("_TOTAL_GUARDIAS_RESIDENTE_FESTIVO"));
 			
 			
-			
+					
 				
 		} // fin de if (!_lPoolDAYS.contains(DIASEMANA) && !bExisteMedicoConGuardiaSolo)
-		 
+
+		cWeek.add(Calendar.DAY_OF_MONTH, 1);
 	}  // for dias de semana
     
-	cWeek.add(Calendar.WEEK_OF_MONTH, 1);
+	
+	
 
 } // for semanas del mes 
 

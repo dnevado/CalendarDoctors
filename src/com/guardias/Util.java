@@ -32,6 +32,12 @@ import javax.mail.*;
 import javax.mail.internet.*;
 
 public class Util {
+		
+		public static final String _COLOR_PRESENCIA = "";
+		public static final String _COLOR_LOCALIZADA = "";
+		public static final String _COLOR_REFUERZO = "";
+		public static final String _COLOR_RESIDENTE = "";
+	
 
 		public  static final String _TITULO_EVENTO ="Guardia {TIPO}";
 		public  static final String _DESCRIPCION_EVENTO ="Guardia {TIPO} {FECHA}";
@@ -41,6 +47,9 @@ public class Util {
 		public final static long SECOND_MILLIS = 1000;
 	    public final static long MINUTE_MILLIS = SECOND_MILLIS*60;
 	    public final static long DAYS_MILLIS = MINUTE_MILLIS*60*24;
+	    
+	    public final static String  MIME_TYPE_SQLLITE = "application/x-sqlite3";
+	    
 	    
 	    private final static String  RUTA_DATA_XML ="";
 	    
@@ -55,14 +64,19 @@ public class Util {
 	    
 	    
 	    public  enum eTipoGuardia {PRESENCIA,LOCALIZADA,REFUERZO,SIMULADO} ;  // PONEMOS UN CASO ESPECIAL PARA LAS GUARDOAS DE ADJUNTOS SIN RESIDENTES (SIMULADO)
-	    public  static final String _EMAIL_GOOGLE_ACCOUNT ="refundable.tech@gmail.com";
+	    private  static final String CALENDARIO_EMAIL_OWNER ="refundable.tech@gmail.com";
 	    
 	    private  static final String _EMAIL_GOOGLE_ACCOUNT_FROM ="wearyours.noreply@gmail.com";
-	    private  static final String _EMAIL_GOOGLE_ACCOUNT_PASSWORD ="nevadodM1";
+	    private  static final String _EMAIL_GOOGLE_ACCOUNT_PASSWORD ="";
 	    private static String EMAIL_GOOGLE_ACCOUNT_HOST= "smtp.gmail.com";
+	    
+	    private static String BBDD_SQLLITE_PATH= "D:\\Program Files\\Apache Software Foundation\\Tomcat 9.0\\BBDD_sqllite\\guardias.db";
 	    
 	    public static String MAIL_SUBJECT = "Guardias del mes ";
 	    public static String MAIL_BODY = "A continuación se incluye el calendario de guardias de ";
+	    
+	    public static String ENTORNO_PREFIJO_BACKUPS = "des"; // pro
+	    
 	    
 	    
 	    private  static Long MAX_NUMERO_DIAS_SEGUIDOS_ADJUNTOS_VALUE = new Long(2);  // EXCEPTO PRESENCIA - PRESENCIA
@@ -91,10 +105,109 @@ public class Util {
 	    private static String oCONST_CALENDARIO_FICHERO_P12_RUTA = "CALENDARIO_FICHERO_P12_RUTA";
 	    private static String oCONST_CALENDARIO_MINUTOS_RECORDATORIO = "CALENDARIO_MINUTOS_RECORDATORIO";  // 0 cero si no se quieren.
 	    private static String oCONST__SERVICE_CALENDAR = "ServiceCalendar";  // 0 cero si no se quieren.
+	    private static String oCONST_BBDD_PATH = "BBDD_SQLLITE_PATH";  // 0 cero si no se quieren.
+	    
+	    private static String oCONST_MAIL_FROM = "_EMAIL_GOOGLE_ACCOUNT_FROM";  // 0 cero si no se quieren.
+	    private static String oCONST_MAIL_FROM_PASSWORD = "_EMAIL_GOOGLE_ACCOUNT_PASSWORD";  // 0 cero si no se quieren.
+	    
+	    private static String oCONST_CALENDARIO_EMAIL_OWNER = "CALENDARIO_EMAIL_OWNER";  // 0 cero si no se quieren.
+	    
+	    private static String oCONST_ENTORNO_PREFIJO_BACKUPS = "ENTORNO_PREFIJO_BACKUPS";  // 0 cero si no se quieren.
+	    
 	    
 	
 	
 	 
+	public static String getoCONST_ENTORNO_PREFIJO_BACKUPS() {
+			return oCONST_ENTORNO_PREFIJO_BACKUPS;
+		}
+
+
+
+
+
+
+		public static void setoCONST_ENTORNO_PREFIJO_BACKUPS(String oCONST_ENTORNO_PREFIJO_BACKUPS) {
+			Util.oCONST_ENTORNO_PREFIJO_BACKUPS = oCONST_ENTORNO_PREFIJO_BACKUPS;
+		}
+
+
+
+
+
+
+	public static String getoCONST_CALENDARIO_EMAIL_OWNER() {
+			return oCONST_CALENDARIO_EMAIL_OWNER;
+		}
+
+
+
+
+
+
+		public static void setoCONST_CALENDARIO_EMAIL_OWNER(String oCONST_CALENDARIO_EMAIL_OWNER) {
+			Util.oCONST_CALENDARIO_EMAIL_OWNER = oCONST_CALENDARIO_EMAIL_OWNER;
+		}
+
+
+
+
+
+
+	public static String getoCONST_BBDD_PATH() {
+			return oCONST_BBDD_PATH;
+		}
+
+
+
+
+
+
+		public static void setoCONST_BBDD_PATH(String oCONST_BBDD_PATH) {
+			Util.oCONST_BBDD_PATH = oCONST_BBDD_PATH;
+		}
+
+
+
+
+
+
+		public static String getoCONST_MAIL_FROM() {
+			return oCONST_MAIL_FROM;
+		}
+
+
+
+
+
+
+		public static void setoCONST_MAIL_FROM(String oCONST_MAIL_FROM) {
+			Util.oCONST_MAIL_FROM = oCONST_MAIL_FROM;
+		}
+
+
+
+
+
+
+		public static String getoCONST_MAIL_FROM_PASSWORD() {
+			return oCONST_MAIL_FROM_PASSWORD;
+		}
+
+
+
+
+
+
+		public static void setoCONST_MAIL_FROM_PASSWORD(String oCONST_MAIL_FROM_PASSWORD) {
+			Util.oCONST_MAIL_FROM_PASSWORD = oCONST_MAIL_FROM_PASSWORD;
+		}
+
+
+
+
+
+
 	public static int daysDiff( Date earlierDate, Date laterDate )
 	    {
 	        if( earlierDate == null || laterDate == null ) return 0;

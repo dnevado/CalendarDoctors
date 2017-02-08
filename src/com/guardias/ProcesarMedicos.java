@@ -83,6 +83,132 @@ public class ProcesarMedicos {
 	}
 	
 	
+	/* DIA 1 Y PARCIALES DE 7 */ 
+	public static List<Long> ListaDiasSemanaPorOrdenMenorSimulados(Calendar cSemana, List<Long> ListaFestivos, Util.eTipoDia TipoDia, int MesActual,
+			HashMap<Long, Hashtable> _ListaGuardiasMedicos, List<Medico> lMedicos)
+	{ 
+		
+		
+		
+		/* DIA, TOTAL SIMULADOS */
+		Map<Long,Long> lUNSortedListaDiasMedicos = new HashMap <Long, Long>();
+						
+		
+		Calendar _cINICIO  = Calendar.getInstance();
+		_cINICIO.setTimeInMillis(cSemana.getTimeInMillis()); 
+		
+		
+		Calendar calcSemanaCal= Calendar.getInstance(); 
+		calcSemanaCal.setTimeInMillis(_cINICIO.getTimeInMillis());
+		final int currentDayOfWeek = (calcSemanaCal.get(Calendar.DAY_OF_WEEK) + 7 - calcSemanaCal.getFirstDayOfWeek()) % 7;		 
+		//calcSemanaCal.set(Calendar., Calendar.WEDNESDAY);
+		calcSemanaCal.add(Calendar.DATE , -currentDayOfWeek);
+		
+		/* si ha pasado de mes cSemana al siguiente */				
+		/* int _days  = ProcesarMedicos.DiasSemanaCursoDentroMes(cSemana, MesActual);
+		if (_days<7)
+		{
+			calcSemanaCal.setTimeInMillis(cSemana.getTimeInMillis());
+		}*/
+		int _days  = 7;
+		
+		
+		
+		for (int j=1;j<=_days;j++)
+		{
+			
+			if (calcSemanaCal.get(Calendar.MONTH)==MesActual)
+			{
+			
+			Long _ActualDayOfWeek = new Long(calcSemanaCal.get(Calendar.DATE));
+			Long  IDAdjuntoGuardiaDia = new Long(-1);
+			
+			try {
+				IDAdjuntoGuardiaDia = ProcesarMedicos.getMedicoGuardiaDia(_ActualDayOfWeek.intValue(), _ListaGuardiasMedicos, Util.eTipo.ADJUNTO, lMedicos);
+				
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			String _KeyTOTAL ="_TOTAL_" + Util.eSubtipoResidente.SIMULADO + "_DIARIO_MES"; 
+			String _KeyTOTAL_Festivos ="_TOTAL_" + Util.eSubtipoResidente.SIMULADO + "_FESTIVOS_MES";
+    		/* if (EsFestivo)
+				_KeyTOTAL= "_TOTAL_" + Util.eSubtipoResidente.SIMULADO + "_FESTIVOS_MES";
+    		*/
+    		Hashtable  DatosGuardias = _ListaGuardiasMedicos.get(IDAdjuntoGuardiaDia);
+    		Long Total =  new Long(0);
+    		Long TotalF =  new Long(0);
+    		if (DatosGuardias.containsKey(_KeyTOTAL))   
+    		{	
+    			Total =  Long.parseLong(DatosGuardias.get(_KeyTOTAL).toString());    		    			
+    		}
+    		if (DatosGuardias.containsKey(_KeyTOTAL_Festivos))   
+    		{	
+    			TotalF =  Long.parseLong(DatosGuardias.get(_KeyTOTAL_Festivos).toString());    		    			
+    		}
+			
+    		boolean bDayToAdd = false;
+    		
+			if (TipoDia.equals(Util.eTipoDia.DIARIO))			
+					if (!ListaFestivos.contains(_ActualDayOfWeek))
+							bDayToAdd=true;
+							//lDays.add(_ActualDayOfWeek);
+
+			if (TipoDia.equals(Util.eTipoDia.FESTIVO))			
+				if (ListaFestivos.contains(_ActualDayOfWeek))
+						bDayToAdd=true;
+						//lDays.add(_ActualDayOfWeek);
+
+			
+			if (bDayToAdd)
+				{
+					lUNSortedListaDiasMedicos.put(_ActualDayOfWeek, Total + TotalF);
+					System.out.println("Dia:" + _ActualDayOfWeek + ",total:" + Total + TotalF);
+				}
+				
+			}
+			
+			
+			
+			
+			calcSemanaCal.add(Calendar.DATE, 1);
+		}
+		
+		
+	   Set<Entry<Long, Long>> mapEntries = lUNSortedListaDiasMedicos.entrySet();
+        
+        List<Map.Entry<Long, Long>> lSortedListaGuardiasMedicos = new ArrayList<Map.Entry<Long, Long>>();
+        
+        for(Entry<Long, Long> entry : mapEntries) {
+       //     System.out.println(entry.getValue() + " - "+ entry.getKey());
+
+            lSortedListaGuardiasMedicos.add(entry);
+        }
+        
+        // used linked list to sort, because insertion of elements in linked list is faster than an array list. 
+        
+
+        // sorting the List
+        ByTotalesGuardiasASC _ByTotalesGuardiasASC  = new ByTotalesGuardiasASC();
+        
+        Collections.sort(lSortedListaGuardiasMedicos, _ByTotalesGuardiasASC);
+		
+        
+        // Storing the list into Linked HashMap to preserve the order of insertion. 
+        List<Long> lDaysSorted = new ArrayList<Long>();
+        	for(Entry<Long,Long> entry: lSortedListaGuardiasMedicos) {
+        		lDaysSorted.add(entry.getKey());
+        		System.out.println("key:" + entry.getKey());
+        }
+        
+        	
+        	System.out.println(lDaysSorted);
+        
+		return lDaysSorted;
+		 
+		
+	}
+	
 	
 	/* ESTO ES PARA REVISAR QUE AUNQUE FALTEN POR ASIGNAR CUPOS DE RESIDENTES, SI HAY VACACIONES, ESTO NO SE CONTEMPLA, POR LO QUE SI ESTAN TODOS VERIFICADOS, SE AGIGNA AL SIMULADO */
 	public static boolean  TodosMedicosVerificadosDia(List<Medico> _ListaABuscar, List<Long> ListaConIdsOrigen) throws ParserConfigurationException, SAXException, IOException
@@ -305,6 +431,34 @@ public class ProcesarMedicos {
 		return Existe;
 	}
 	
+	
+	/* public  static  Hashtable  getDatosGuardiasMedico(Long _IdMedico, HashMap<Long, Hashtable> _ListaGuardiasMedicos, Util.eTipo TipoMedico, List<Medico> lMedicos) throws ParseException
+	{		
+		
+		Iterator entries = _ListaGuardiasMedicos.entrySet().iterator();	
+		Long keyMEDICO = new Long(-1);
+		
+		boolean bEncontrado= false;
+		
+		Hashtable lDatosTemp=null;
+		
+		while (entries.hasNext() && !bEncontrado) 
+		{
+		  Entry thisEntry = (Entry) entries.next();
+		  keyMEDICO = (Long) thisEntry.getKey(); 
+		  // puede ser un adjunto  en una lista de residente
+		  if (!ExisteMedicoPorId(lMedicos,keyMEDICO))		  
+			  continue;
+		  
+		   lDatosTemp = (Hashtable) thisEntry.getValue();
+		  if (keyMEDICO.equals(_IdMedico))
+			  bEncontrado =true;
+		
+
+		} 						
+		return lDatosTemp;
+	}
+	*/
 	
 	/* 
 	[1]
@@ -813,14 +967,21 @@ public class ProcesarMedicos {
 					  	MenorTotal = _TotalMedico.intValue();
 					  	Contador++;  			
 				  
-				  }  
+				  }
+				  
+				  /* 2017-02-02  
+				   *  con un distribucion de adjuntos 
+				   * 
+				   */
 				  Long DIFERENCIA_MAX_SIMULADOS_ADJUNTOS = Long.parseLong(ConfigurationDBImpl.GetConfiguration(Util.getoCONST_DIFERENCIA_MAX_SIMULADOS_POR_ADJUNTO_MES()).getValue());
 				  
 				  
 				  if (_TotalMedico.longValue()<=  MenorTotal+DIFERENCIA_MAX_SIMULADOS_ADJUNTOS.intValue())  // devolvemos una lista de adjuntos para poder elegir varios
+					  
+					  System.out.println("Medico:" + oMedico.getApellidos() + "," + oMedico.getNombre() + "TotalSimulados:" + _TotalMedico + ",_MININO_:" + _MININO_RESTO_MEDICOS);
 					  // siempre que esten dentro del margen
 					  lIDMEDICOMenosSimulados.add(keyMEDICO);
-				//  System.out.println("Medico:" + oMedico.getApellidos() + "," + oMedico.getNombre() + ",ExcedeHoras:" + ExcedeHorasSeguidasMedico + ",Guardia:" + _GuardiaTipo + ",dia:"+ _Dia + ",_MININO_RESTO_MEDICOS:" + _MININO_RESTO_MEDICOS);
+
 			  }
 
 		  }	  
