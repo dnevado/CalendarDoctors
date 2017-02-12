@@ -101,6 +101,8 @@ style=" color: #1A6B1D;background-color: #c1bfb4;"  class="orden2 adjunto locali
     String[] aMails = lMails.toArray(new String[lMails.size()]);        
      
     Util.sendFromGMail(aMails, Util.MAIL_SUBJECT + _Date, Util.MAIL_BODY + _Date, System.getProperty("java.io.tmpdir") + _Date+".xls", _Date+".xls");
+    
+    out.println("OK");
 	
 	}
 	catch (Exception e)

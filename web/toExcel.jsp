@@ -78,6 +78,8 @@
 	  	     File _TmpExcel = new File(System.getProperty("java.io.tmpdir") + _Date+".xlsx");
 	  	     if (_TmpExcel.canWrite() && _TmpExcel.exists())
 	  	    	_TmpExcel.delete();
+	  	     
+	  	     
 	  	}
 	  	catch (Exception e)
 	  	{
@@ -107,6 +109,8 @@
 	 	     File _TmpExcel = new File(System.getProperty("java.io.tmpdir") + _Date+".xlsx");
 	 	     if (_TmpExcel.canWrite() && _TmpExcel.exists())
 	 	    	_TmpExcel.delete();
+	 	     
+	 	    out.println("OK");
 	    }
 	    
  	     

@@ -66,8 +66,8 @@ public class Util {
 	    public  enum eTipoGuardia {PRESENCIA,LOCALIZADA,REFUERZO,SIMULADO} ;  // PONEMOS UN CASO ESPECIAL PARA LAS GUARDOAS DE ADJUNTOS SIN RESIDENTES (SIMULADO)
 	    private  static final String CALENDARIO_EMAIL_OWNER ="refundable.tech@gmail.com";
 	    
-	    private  static final String _EMAIL_GOOGLE_ACCOUNT_FROM ="wearyours.noreply@gmail.com";
-	    private  static final String _EMAIL_GOOGLE_ACCOUNT_PASSWORD ="";
+	    private  static  String _EMAIL_GOOGLE_ACCOUNT_FROM ="wearyours.noreply@gmail.com";
+	    private  static String _EMAIL_GOOGLE_ACCOUNT_PASSWORD ="";
 	    private static String EMAIL_GOOGLE_ACCOUNT_HOST= "smtp.gmail.com";
 	    
 	    private static String BBDD_SQLLITE_PATH= "D:\\Program Files\\Apache Software Foundation\\Tomcat 9.0\\BBDD_sqllite\\guardias.db";
@@ -123,91 +123,21 @@ public class Util {
 		}
 
 
-
-
-
-
-		public static void setoCONST_ENTORNO_PREFIJO_BACKUPS(String oCONST_ENTORNO_PREFIJO_BACKUPS) {
-			Util.oCONST_ENTORNO_PREFIJO_BACKUPS = oCONST_ENTORNO_PREFIJO_BACKUPS;
-		}
-
-
-
-
-
-
 	public static String getoCONST_CALENDARIO_EMAIL_OWNER() {
 			return oCONST_CALENDARIO_EMAIL_OWNER;
 		}
-
-
-
-
-
-
-		public static void setoCONST_CALENDARIO_EMAIL_OWNER(String oCONST_CALENDARIO_EMAIL_OWNER) {
-			Util.oCONST_CALENDARIO_EMAIL_OWNER = oCONST_CALENDARIO_EMAIL_OWNER;
-		}
-
-
-
-
-
 
 	public static String getoCONST_BBDD_PATH() {
 			return oCONST_BBDD_PATH;
 		}
 
-
-
-
-
-
-		public static void setoCONST_BBDD_PATH(String oCONST_BBDD_PATH) {
-			Util.oCONST_BBDD_PATH = oCONST_BBDD_PATH;
-		}
-
-
-
-
-
-
 		public static String getoCONST_MAIL_FROM() {
 			return oCONST_MAIL_FROM;
 		}
 
-
-
-
-
-
-		public static void setoCONST_MAIL_FROM(String oCONST_MAIL_FROM) {
-			Util.oCONST_MAIL_FROM = oCONST_MAIL_FROM;
-		}
-
-
-
-
-
-
 		public static String getoCONST_MAIL_FROM_PASSWORD() {
 			return oCONST_MAIL_FROM_PASSWORD;
 		}
-
-
-
-
-
-
-		public static void setoCONST_MAIL_FROM_PASSWORD(String oCONST_MAIL_FROM_PASSWORD) {
-			Util.oCONST_MAIL_FROM_PASSWORD = oCONST_MAIL_FROM_PASSWORD;
-		}
-
-
-
-
-
-
 	public static int daysDiff( Date earlierDate, Date laterDate )
 	    {
 	        if( earlierDate == null || laterDate == null ) return 0;
@@ -223,6 +153,10 @@ public class Util {
 	public static void sendFromGMail(String[] to, String subject, String body, String PathToFile, String FileName ) throws IOException {
         Properties props = System.getProperties();
        
+        
+        _EMAIL_GOOGLE_ACCOUNT_FROM = ConfigurationDBImpl.GetConfiguration(oCONST_MAIL_FROM).getValue();
+        _EMAIL_GOOGLE_ACCOUNT_PASSWORD = ConfigurationDBImpl.GetConfiguration(oCONST_MAIL_FROM_PASSWORD).getValue();
+        
         props.put("mail.smtp.starttls.enable", "true");
         props.put("mail.smtp.host", EMAIL_GOOGLE_ACCOUNT_HOST);
         props.put("mail.smtp.user", _EMAIL_GOOGLE_ACCOUNT_FROM);

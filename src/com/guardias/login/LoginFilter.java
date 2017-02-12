@@ -41,7 +41,7 @@ public class LoginFilter implements Filter {
 	    HttpSession session = request.getSession(false);
 	    String path = ((HttpServletRequest) request).getRequestURI();
 	    if (!path.contains(pathToBeIgnored)  &&  // login.jsp img css js
-	    			!path.contains(".js")   && 
+	    			!path.contains("/js")   && 
 	    					!path.contains("img") && 
 	    						!path.contains("css") &&  
 	    							!path.contains("font") &&
