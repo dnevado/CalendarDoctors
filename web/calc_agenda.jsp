@@ -830,6 +830,7 @@ for (int j=1;j<=NUM_SEMANAS_MES;j++)
 			
 			_EsFestivo = _TIPODIA.equals(Util.eTipoDia.FESTIVO);
 			int _DIAS_SEMANA_EN_CURSO = 0;						 
+			
 			int _NUM_SIMULADOS_ACTUALES_SEMANA = 0;
 			int _NUM_RESIDENTES_ACTUALES_SEMANA = 0;
 			 
@@ -1058,7 +1059,7 @@ for (int j=1;j<=NUM_SEMANAS_MES;j++)
 			}
 			
 			System.out.println("Encontrado:true, Medico:" +oM.getApellidos() + ",Dia:" + DIASEMANAMES + "TotalGuardias:" + _lDatosGuardiasMedico.get("_NUMERO_GUARDIAS_" + Util.eTipo.RESIDENTE + "_MES") + ",Festivos:" + _lDatosGuardiasMedico.get("_TOTAL_GUARDIAS_RESIDENTE_FESTIVO"));
-			
+			 
 			
 			} // FIN DE ITERACION DE RESIDENTES 		
 				
