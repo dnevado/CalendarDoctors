@@ -100,9 +100,9 @@ public class CalendarToExcel {
             Sheet sheet = wb.createSheet(_format.format(calendar.getTime()));
 
             //turn off gridlines
-            sheet.setDisplayGridlines(false);
+            sheet.setDisplayGridlines(true);
             sheet.autoSizeColumn(0);
-            sheet.setPrintGridlines(false);
+            sheet.setPrintGridlines(true);
             sheet.setFitToPage(true);
             sheet.setHorizontallyCenter(true);
             PrintSetup printSetup = sheet.getPrintSetup();

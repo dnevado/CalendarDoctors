@@ -99,6 +99,7 @@
 	if (_CalendarioGoogle.equals("S"))
 	{
 			 _calendarUtil = new CalendarEventUtil();
+			 _calendarUtil.InitCalendarService();
 	}
     
 	String EventId= "";

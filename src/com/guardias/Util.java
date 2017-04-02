@@ -1,6 +1,7 @@
 package com.guardias;
 
 import java.io.File;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -25,6 +26,7 @@ import com.google.api.services.calendar.model.EventReminder;
 import com.guardias.database.ConfigurationDBImpl;
 import java.util.*;
 
+
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.activation.FileDataSource;
@@ -33,14 +35,20 @@ import javax.mail.internet.*;
 
 public class Util {
 		
+	
+		public static final String _WELCOME_REGISTRATION_SUBJECT = "Bienvenido a MEDONCALLS";
+	
 		public static final String _COLOR_PRESENCIA = "";
 		public static final String _COLOR_LOCALIZADA = "";
 		public static final String _COLOR_REFUERZO = "";
 		public static final String _COLOR_RESIDENTE = "";
+		
+		
+		public static final String _CLAVE_ENCRIPTACION = "medoncalls022017";
 	
 
-		public  static final String _TITULO_EVENTO ="Guardia {TIPO}";
-		public  static final String _DESCRIPCION_EVENTO ="Guardia {TIPO} {FECHA}";
+		public  static final String _TITULO_EVENTO ="medONCALLS  {TIPO}";
+		public  static final String _DESCRIPCION_EVENTO ="medONCALLS {TIPO} {FECHA}";
 		public  static final String _COLOR_EVENTO ="10";
 	
 	
@@ -53,14 +61,15 @@ public class Util {
 	    
 	    private final static String  RUTA_DATA_XML ="";
 	    
-	    
+	    public  enum eTipoCambiosGuardias{CAMBIO,CESION,NOAPLICA} ;
+	    public  enum eEstadoCambiosGuardias{PENDIENTE,APROBADA,CANCELADA, RECHAZADA} ;
 	    public  enum eTipoDia{DIARIO,FESTIVO} ;
 	    public  enum eTipo{RESIDENTE,ADJUNTO} ;
 	    public  enum eSubtipoResidente {R1,R2,R3,R4,R5,SIMULADO,ROTANTE} ;
 	    
 	    /* ESTO NOS SIRVE PARA DISTRIBUIR ENTRE EL NUMERO DE SEMANAS COMPLETAS */
 	    /* PUEDE SER UN PROBLEMA QUE HAYA SEMANAS DE MENOS  DE 7 DIAS Y QUE SE DISTRIBUYAN UNIFORMEMENTE POR ESAS TB LOS RESIDENTES */ 
-	    public final static int CALC_NUM_SEMANAS_MES= 4; 
+	    public final static int CALC_NUM_SEMANAS_MES= 5; 
 	    
 	    
 	    public  enum eTipoGuardia {PRESENCIA,LOCALIZADA,REFUERZO,SIMULADO} ;  // PONEMOS UN CASO ESPECIAL PARA LAS GUARDOAS DE ADJUNTOS SIN RESIDENTES (SIMULADO)
@@ -71,6 +80,9 @@ public class Util {
 	    private static String EMAIL_GOOGLE_ACCOUNT_HOST= "smtp.gmail.com";
 	    
 	    private static String BBDD_SQLLITE_PATH= "D:\\Program Files\\Apache Software Foundation\\Tomcat 9.0\\BBDD_sqllite\\guardias.db";
+	    
+	    public static String MYIBATIS_CONFIG_FILE= "com/guardias/persistence";
+	    
 	    
 	    public static String MAIL_SUBJECT = "Guardias del mes ";
 	    public static String MAIL_BODY = "A continuación se incluye el calendario de guardias de ";
@@ -86,6 +98,8 @@ public class Util {
 	    
 	    private static Long MAXIMAS_ITERACIONES_PERMITIDAS_VALUE = new Long(1); // DIFERENCIA ASUMIBLE DE SIMULADOS ENTRE ADJUNTOS, PARA QUE NO SEA MUY
 	    
+	    
+	    
 	    /*
 	    private static String   PUBLICAR_CALENDARIO_GMAIL_VALUE = ""; // S/N
 	    private static String  GOOGLE_SERVICE_ACCOUNT_VALUE = "GOOGLE_SERVICE_ACCOUNT";
@@ -96,9 +110,19 @@ public class Util {
 	    // MECANICA LA ASIGNACION DE RESIDENTES SIMULADOS NI PREVISORA
 	    
 	    
-	    private static String oCONST_NUMERO_DIAS_SEGUIDOS_ADJUNTOS = "CONST_MAX_NUMERO_DIAS_SEGUIDOS_ADJUNTOS";
+	    public static String getoCONST_EXISTE_POOLDAY() {
+			return oCONST_EXISTE_POOLDAY;
+		}
+
+
+		public static void setoCONST_EXISTE_POOLDAY(String oCONST_EXISTE_POOLDAY) {
+			Util.oCONST_EXISTE_POOLDAY = oCONST_EXISTE_POOLDAY;
+		}
+
+
+		private static String oCONST_NUMERO_DIAS_SEGUIDOS_ADJUNTOS = "CONST_MAX_NUMERO_DIAS_SEGUIDOS_ADJUNTOS";
 	    private static String oCONST_MAX_NUMERO_DIAS_SEGUIDOS_RESIDENTESS = "CONST_MAX_NUMERO_DIAS_SEGUIDOS_RESIDENTES";
-	    private static String oCONST_DIFERENCIA_MAX_SIMULADOS_POR_ADJUNTO_MES = "CONST_DIFERENCIA_MAX_SIMULADOS_POR_ADJUNTO_MES";
+		private static String oCONST_DIFERENCIA_MAX_SIMULADOS_POR_ADJUNTO_MES = "CONST_DIFERENCIA_MAX_SIMULADOS_POR_ADJUNTO_MES";
 	    private static String oCONST_MAXIMAS_ITERACIONES_PERMITIDAS = "CONST_MAXIMAS_ITERACIONES_PERMITIDAS";
 	    private static String oCONST_CALENDARIO_GMAIL = "PUBLICAR_CALENDARIO_GMAIL";	    
 	    private static String oCONST_GOOGLE_SERVICE_ACCOUNT = "GOOGLE_SERVICE_ACCOUNT";
@@ -106,18 +130,61 @@ public class Util {
 	    private static String oCONST_CALENDARIO_MINUTOS_RECORDATORIO = "CALENDARIO_MINUTOS_RECORDATORIO";  // 0 cero si no se quieren.
 	    private static String oCONST__SERVICE_CALENDAR = "ServiceCalendar";  // 0 cero si no se quieren.
 	    private static String oCONST_BBDD_PATH = "BBDD_SQLLITE_PATH";  // 0 cero si no se quieren.
-	    
 	    private static String oCONST_MAIL_FROM = "_EMAIL_GOOGLE_ACCOUNT_FROM";  // 0 cero si no se quieren.
 	    private static String oCONST_MAIL_FROM_PASSWORD = "_EMAIL_GOOGLE_ACCOUNT_PASSWORD";  // 0 cero si no se quieren.
-	    
 	    private static String oCONST_CALENDARIO_EMAIL_OWNER = "CALENDARIO_EMAIL_OWNER";  // 0 cero si no se quieren.
-	    
 	    private static String oCONST_ENTORNO_PREFIJO_BACKUPS = "ENTORNO_PREFIJO_BACKUPS";  // 0 cero si no se quieren.
+	    private static String oCONST_ACTIVAR_CAMBIO_GUARDIAS = "ACTIVAR_CAMBIO_GUARDIAS";  // 0 cero si no se quieren.
+	    private static String oCONST_VALIDAR_CAMBIOS_GUARDIAS_BY_ADM = "VALIDAR_CAMBIOS_GUARDIAS_BY_ADM";  // 0 cero si no se quieren.
+	    private static String oCONST_EXISTE_POOLDAY = "EXISTE_POOLDAY";  // 0 cero si no se quieren.
+	    
+	    public static String getoCONST_NUMERO_PRESENCIAS() {
+			return oCONST_NUMERO_PRESENCIAS;
+		}
+
+
+		public static String getoCONST_NUMERO_REFUERZOS_LOCALIZADAS() {
+			return oCONST_NUMERO_REFUERZOS_LOCALIZADAS;
+		}
+
+
+		private static String oCONST_NUMERO_PRESENCIAS = "NUMERO_PRESENCIAS";  // 0 cero si no se quieren.
+	    private static String oCONST_NUMERO_REFUERZOS_LOCALIZADAS = "NUMERO_REFUERZOS_LOCALIZADAS";  // 0 cero si no se quieren.	    
+	    private static String oCONST_NUMERO_RESIDENTES = "NUMERO_RESIDENTES";  // 0 cero si no se quieren.
 	    
 	    
-	
-	
+	    
+	    
+	    public static String getoCONST_NUMERO_RESIDENTES() {
+			return oCONST_NUMERO_RESIDENTES;
+		}
+
+
+		public static String getoCONST_MAX_NUMERO_DIAS_SEGUIDOS_RESIDENTESS() {
+			return oCONST_MAX_NUMERO_DIAS_SEGUIDOS_RESIDENTESS;
+		}
+
 	 
+	public static String getoCONST_ACTIVAR_CAMBIO_GUARDIAS() {
+			return oCONST_ACTIVAR_CAMBIO_GUARDIAS;
+		}
+
+
+		public static void setoCONST_ACTIVAR_CAMBIO_GUARDIAS(String oCONST_ACTIVAR_CAMBIO_GUARDIAS) {
+			Util.oCONST_ACTIVAR_CAMBIO_GUARDIAS = oCONST_ACTIVAR_CAMBIO_GUARDIAS;
+		}
+
+
+		public static String getoCONST_VALIDAR_CAMBIOS_GUARDIAS_BY_ADM() {
+			return oCONST_VALIDAR_CAMBIOS_GUARDIAS_BY_ADM;
+		}
+
+
+		public static void setoCONST_VALIDAR_CAMBIOS_GUARDIAS_BY_ADM(String oCONST_VALIDAR_CAMBIOS_GUARDIAS_BY_ADM) {
+			Util.oCONST_VALIDAR_CAMBIOS_GUARDIAS_BY_ADM = oCONST_VALIDAR_CAMBIOS_GUARDIAS_BY_ADM;
+		}
+
+
 	public static String getoCONST_ENTORNO_PREFIJO_BACKUPS() {
 			return oCONST_ENTORNO_PREFIJO_BACKUPS;
 		}
@@ -169,6 +236,9 @@ public class Util {
 
         try {
             message.setFrom(new InternetAddress(_EMAIL_GOOGLE_ACCOUNT_FROM));
+            
+            
+            
             InternetAddress[] toAddress = new InternetAddress[to.length];
 
             // To get the array of addresses
@@ -183,6 +253,9 @@ public class Util {
             message.addRecipient(Message.RecipientType.BCC, new InternetAddress(_EMAIL_GOOGLE_ACCOUNT_FROM));
 
             BodyPart messageBodyPart = new MimeBodyPart();
+            
+            
+            
 
             Multipart multipart = new MimeMultipart();
 
@@ -211,24 +284,26 @@ public class Util {
             
 
             // Fill the message
-            messageBodyPart.setText(body);
+            //messageBodyPart.setText(body);
+            messageBodyPart.setContent(body, "text/html");
+            		
             
             // Create a multipart message for attachment
            
             // Set text message part
             multipart.addBodyPart(messageBodyPart);
 
+            
             // Second part is attachment
-            messageBodyPart = new MimeBodyPart();
-            String filename = "abc.txt";
-            DataSource source = new FileDataSource(PathToFile);
-            messageBodyPart.setDataHandler(new DataHandler(source));
-            messageBodyPart.setFileName(FileName);
-            multipart.addBodyPart(messageBodyPart);
             
-            
-            
-            
+            if (!PathToFile.equals(""))
+            {
+	            messageBodyPart = new MimeBodyPart();            
+	            DataSource source = new FileDataSource(PathToFile);
+	            messageBodyPart.setDataHandler(new DataHandler(source));
+	            messageBodyPart.setFileName(FileName);
+	            multipart.addBodyPart(messageBodyPart);
+            }
             
             /* MimeBodyPart attachPart = new MimeBodyPart();
             String attachFile = PathToFile;
@@ -265,10 +340,10 @@ public class Util {
 	}
 
 
-	public static String getoCONST_MAX_NUMERO_DIAS_SEGUIDOS_RESIDENTESS() {
+/* 	public static String getoCONST_MAX_NUMERO_DIAS_SEGUIDOS_RESIDENTESS() {
 		return oCONST_MAX_NUMERO_DIAS_SEGUIDOS_RESIDENTESS;
 	}
-
+*/
 
 
 
@@ -314,10 +389,68 @@ public class Util {
 
 
 
+	public static int whichDayOfWeek(java.util.Calendar calendar) {
+        if (calendar.get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.MONDAY) {
+            return 1;
+        } else if (calendar.get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.TUESDAY) {
+            return 2;
+        } else if (calendar.get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.WEDNESDAY) {
+            return 3;
+        } else if (calendar.get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.THURSDAY) {
+            return 4;
+        } else if (calendar.get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.FRIDAY) {
+            return 5;
+        } else if (calendar.get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.SATURDAY) {
+            return 6;
+        } else if (calendar.get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.SUNDAY) {
+            return 7;
+        } else {
+            return -1;
+        }
+    }	
 
 
+	public static void main(String[] args) {
+		
+	 //Properties props = new Properties();
+	 
+	 
+	  Properties props = System.getProperties();
+      
+     
+	 
+     props.put("mail.smtp.host", "smtp.gmail.com");
+     props.put("mail.smtp.socketFactory.port", "465");
+     props.put("mail.smtp.socketFactory.class",
+             "javax.net.ssl.SSLSocketFactory");
+     props.put("mail.smtp.auth", "true");
+     props.put("mail.smtp.port", "465");
 
-	public static void main(String[] args) {}
-		 
+     Session session = Session.getDefaultInstance(props,
+         new javax.mail.Authenticator() {
+             protected PasswordAuthentication getPasswordAuthentication() {
+                 return new PasswordAuthentication("wearyours.noreply@gmail.com","nevadodM1");
+             }
+         });
+
+     try {
+
+         Message message = new MimeMessage(session);
+         message.setFrom(new InternetAddress("wearyours.noreply@gmail.com"));
+         message.setRecipients(Message.RecipientType.TO,
+                 InternetAddress.parse("dnevado@gmail.com"));
+         message.setSubject("Testing Subject");
+         message.setText("Dear User," +
+                 "\n\n No spam to my email, please!");
+
+         Transport.send(message);
+
+         System.out.println("Done");
+
+     } catch (MessagingException e) {
+    	 e.printStackTrace(); 
+         throw new RuntimeException(e);
+     }
+ }
 	
 }

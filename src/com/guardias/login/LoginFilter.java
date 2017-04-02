@@ -18,7 +18,7 @@ import javax.servlet.http.HttpSession;
 @WebFilter("/LoginFilter")
 public class LoginFilter implements Filter {
 	
-	private String pathToBeIgnored;
+	private String pathToBeIgnored ="guest";
 
     /**
      * Default constructor. 
@@ -44,8 +44,10 @@ public class LoginFilter implements Filter {
 	    			!path.contains("/js")   && 
 	    					!path.contains("img") && 
 	    						!path.contains("css") &&  
-	    							!path.contains("font") &&
-	    							( session == null || session.getAttribute("User") == null)) {
+	    							!path.contains("/guest") &&
+	    								!path.contains("/public") &&
+	    									!path.contains("font") &&
+	    									( session == null || session.getAttribute("User") == null)) {
 	        response.sendRedirect(request.getContextPath() + "/login.jsp"); // No logged-in user found, so redirect to login page.
 	    } else {
 	        chain.doFilter(req, res); // Logged-in user found, so just continue request.

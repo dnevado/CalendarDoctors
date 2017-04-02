@@ -22,7 +22,30 @@ public class Medico {
 	private Long Orden = new Long(1);
 	
 	private String Email = "";
+	private String PassWord = "";
+	
+	
+	private boolean Administrator=false;
+	private boolean Confirmado=false;
 		
+	public boolean isConfirmado() {
+		return Confirmado;
+	}
+	public void setConfirmado(boolean confirmado) {
+		Confirmado = confirmado;
+	}
+	public boolean isAdministrator() {
+		return Administrator;
+	}
+	public void setAdministrator(boolean administrator) {
+		Administrator = administrator;
+	}
+	public String getPassWord() {
+		return PassWord;
+	}
+	public void setPassWord(String passWord) {
+		PassWord = passWord;
+	}
 	public String getEmail() {
 		return Email;
 	}

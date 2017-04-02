@@ -12,6 +12,59 @@ import com.guardias.Util;
 public class GuardiasDBImpl {
 
 	
+	public static  boolean UpdateGuardiasFechayCalId(String CalIdGA, String FGuardia, Long IdGuardia, Long Festivo, String TipoGuardia) 
+	 {	  
+		
+		 
+	   
+	  PreparedStatement stmt = null;	 
+	  Connection MiConexion =ConexionGuardias.GetConexionGuardias();
+	  
+	  
+			  
+	  
+	  String stSQL = "UPDATE guardias_medicos SET fguardia = (?) , IDEventoGCalendar=(?), Festivo=(?),Tipo=(?)" +
+	   " WHERE id=(?)"		  ;
+	  
+	  
+	  
+	  
+	  
+	 try
+	 {
+	 
+		  stmt = MiConexion.prepareStatement(stSQL);
+		  stmt.setString(1, FGuardia);
+		  stmt.setString(2, CalIdGA);
+		  stmt.setLong(3, Festivo);
+		  stmt.setString(4, TipoGuardia);
+		  stmt.setLong(5, IdGuardia);	
+		  	   
+	
+	  MiConexion.setAutoCommit(true);
+	 stmt.executeUpdate();
+   stmt.close();
+   
+   MiConexion.close();
+   
+   
+   
+	  } catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			try {
+				if (!MiConexion.isClosed())
+					MiConexion.close();
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+	
+	  return true;    		 
+	  }
+	
+	
 	public static  boolean UpdateGuardiasCalId(String EventIdCal, String FGuardia) 
 	 {	  
 		
@@ -86,10 +139,10 @@ public class GuardiasDBImpl {
 	 
 		 stmt = MiConexion.prepareStatement(stSQL);
 		 stmt.setString(1, Day);
-		  if (!IdMedico.equals(new Long(-1)))
+		  /* if (!IdMedico.equals(new Long(-1)))
 		  {
 			  stmt.setLong(2, IdMedico);
-		  }
+		  }*/
 		  
 		  
 			  	  
@@ -178,6 +231,11 @@ public class GuardiasDBImpl {
 		return getGuardias(IdMedico, _FGuardia, "", new Long(-1),"", "");
 				
 	}
+	public static  List<Guardias>  getGuardiasFechaTipo(String _FGuardia, String _TipoGuardia)
+	{
+		return getGuardias(new Long(-1), _FGuardia, _TipoGuardia, new Long(-1),"", "");
+				
+	}
 	public static  List<Guardias>  getGuardiasMedicoFechaTipo(Long IdMedico, String _FGuardia, String _TipoGuardia)
 	{
 		return getGuardias(IdMedico, _FGuardia, _TipoGuardia, new Long(-1),"", "");
@@ -200,11 +258,16 @@ public class GuardiasDBImpl {
 	 public static  int  getTotalGuardiasPorMedicoTipo(Long IdMedico, String _TipoGuardia, Long Festivo)
 	 {
 		 return getGuardias(IdMedico, "", _TipoGuardia,Festivo,"","").size();
-	 }	 
+	 }
 	 
-	 public static  int  getTotalGuardiasPorMedico_DeSimulados(Long IdMedico,  Long Festivo)
+	 public static  int  getTotalGuardiasPorMedicoTipoEntreFechas(Long IdMedico, String _TipoGuardia, Long Festivo, String _FGuardia, String _FGuardia2)
 	 {
-		 return getGuardiasSimulados(IdMedico, Festivo);
+		 return getGuardias(IdMedico, _FGuardia, _TipoGuardia,Festivo,"",_FGuardia2).size();
+	 }
+	 
+	 public static  int  getTotalGuardiasPorMedico_DeSimulados(Long IdMedico,  Long Festivo, String FGuardia, String FGuardia2)
+	 {
+		 return getGuardiasSimulados(IdMedico, Festivo,FGuardia, FGuardia2);
 	 }	 
 	
 	 
@@ -213,7 +276,7 @@ public class GuardiasDBImpl {
 		 return getGuardias(IdMedico, "", "", new Long(-1),"", "");
 	 }	  
 	 
-	 private  static  int  getGuardiasSimulados(Long IdMedico, Long Festivo)
+	 private  static  int  getGuardiasSimulados(Long IdMedico, Long Festivo, String FGuardia, String _FGuardiaHasta)
 	 {
 		 Connection MiConexion =ConexionGuardias.GetConexionGuardias();
 			int total = 0;
@@ -235,6 +298,16 @@ public class GuardiasDBImpl {
 			{
 				stSQL+=" AND  g1.Festivo=" + Festivo;
 			}
+			if (!FGuardia.equals("")) 
+				if (!_FGuardiaHasta.equals(""))
+				{
+					stSQL+=" and  g1.FGuardia>='" + FGuardia + "' and g1.FGuardia<='" + _FGuardiaHasta + "'";
+					stSQL+=" and  g2.FGuardia = g1.FGuardia";	
+				}				
+				else
+				{
+					stSQL+=" and  g1.FGuardia='" + FGuardia + "' and  g2.FGuardia = g1.FGuardia";
+				}
 			
 			
 			ResultSet rs = stmt.executeQuery( stSQL);
@@ -286,7 +359,13 @@ public class GuardiasDBImpl {
 		  
 		stmt = MiConexion.createStatement();
 		
-		String stSQL= "SELECT * FROM guardias_medicos WHERE 1=1";
+		
+		/* NECESITO ORDEM '', LOCALIZADA, REFUERZO Y PRESENCIA 
+		 * NO VALE POR ID POR LOS CAMBIOS DE GUARDIA QUE LO ALTERAN 
+		 * */
+		
+		String stSQL= "SELECT *, CASE WHEN Tipo = 'refuerzo' THEN 'localizada'  ELSE Tipo 	END as Sorted ";
+		stSQL +=" FROM guardias_medicos WHERE 1=1";
 		
 		
 		if (!IdMedico.equals(new Long(-1)))
@@ -310,7 +389,9 @@ public class GuardiasDBImpl {
 			stSQL+=" AND  IdEventoGCalendar='" + EventID  + "'";
 		}
 		
-		stSQL+=" ORDER BY Id desc";
+		//stSQL+=" ORDER BY Id desc";
+		
+		stSQL+=" ORDER BY Sorted";
 		
 		ResultSet rs = stmt.executeQuery( stSQL);
 		

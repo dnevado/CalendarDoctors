@@ -109,7 +109,11 @@ for (int j=1;j<=_daysOfMonth;j++)
 			
 			Medico oM = (Medico) oLM.get(0);
 			
-			_EventsJSON += "<div class='orden" + classContador + " " + oM.getTipo().toString().toLowerCase()  +  " " + _classTipo+" " + sFestivo + "' id=" + oM.getID() + ">"   + oM.getApellidos()+ "," + oM.getNombre() + "</div>";
+			String _EsSimulado= "NO_" + Util.eSubtipoResidente.SIMULADO.toString();
+			if (oM.isResidenteSimulado())
+				_EsSimulado= Util.eSubtipoResidente.SIMULADO.toString();
+			
+			_EventsJSON += "<div class='orden" + classContador + " " + oM.getTipo().toString().toLowerCase()  +  " " + _classTipo+" " + _EsSimulado.toLowerCase() + " " +  sFestivo + "' id=" + oM.getID() + ">"   + oM.getApellidos()+ "," + oM.getNombre() + "</div>";
 			
 			classContador+=1;
 								
