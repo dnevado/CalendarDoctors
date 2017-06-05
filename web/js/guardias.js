@@ -1,3 +1,23 @@
+function EditarMedico(ID){
+	
+	
+		
+	$( "#editarmedico" ).load( "medico/detallemedico.jsp?q=12123&id="  + ID);
+	
+	$( "#editarmedico" ).dialog(
+		    {
+		        title: 'Datos del médico',
+		        position: { my: 'top', at: 'top+75' },
+		        width: '30%',
+		        close: function(event, ui)
+		        {
+		        //	 $("#editarmedico").dialog("destroy");
+		            
+		        }
+		    });		
+	
+}
+
 
 function sortMe(a, b) {	
 	  return a.className < b.className;
@@ -37,10 +57,12 @@ function _FillDataDays()
 	if ($("#calendar div.adjunto").length>0)
 	{				
 		$("#toExcel").show();		
+		$("#tour").show();
 	}
 	else
 	{		
 		$("#toExcel").hide();
+		$("#tour").hide();
 	}
 	
 	
@@ -61,8 +83,22 @@ function _FillDataDays()
 		// recorremos todos los dias
 	//	console.log(".fc-title div."+ _ADJUNTO + "[id=" + ID_INICIAL +"]");
 		
+		
 		$( ".fc-title div."+ _ADJUNTO + "[id=" + ID_INICIAL +"]").each(function( index ) 
-		{ 					  
+		{ 				
+			
+			/* ESTO ES PARA EVITAR QUE NO ME CONTABILICE LOS DIAS DE OTROS MESES */
+			tdEVENT=$(this).closest("td");
+			diaMES = $(this).closest("td").closest("table").find("thead").find("td").eq(tdEVENT.index());
+			
+			//console.log(tdEVENT.html() + ",fc-other-month:" +  diaMES.hasClass("fc-other-month"));	
+			
+			
+			
+			if (diaMES.hasClass("fc-other-month"))
+				return;
+			/* FIN ESTO ES PARA EVITAR QUE NO ME CONTABILICE LOS DIAS DE OTROS MESES */
+			
 			 var bEsPresencia=false;	
 		      if ($(this).hasClass(_REFUERZO))
 		      {	  
@@ -97,7 +133,7 @@ function _FillDataDays()
 		    	  $(this).parent().find("div").each(function( index )		    		 
 		    		      {	
 		    		    	  		    		    	
-		    		    	  if ($(this).hasClass(_SIMULADO))
+		    		    	  if ($(this).hasClass(_SIMULADO.toLowerCase()))
 		    		    		  Simulados+=1;		    	  
 		    		      });  
 		      }	  
@@ -131,7 +167,15 @@ function _FillDataDays()
 		FestivosR = 0;
 		// recorremos todos los dias 
 		$( ".fc-title div."+ _RESIDENTE + "[id=" + ID_INICIAL +"]").each(function( index ) 
-		{ 					  
+		{ 					
+			
+
+			/* ESTO ES PARA EVITAR QUE NO ME CONTABILICE LOS DIAS DE OTROS MESES */
+			tdEVENT=$(this).closest("td");
+			diaMES = $(this).closest("td").closest("table").find("thead").find("td").eq(tdEVENT.index());
+			if (diaMES.hasClass("fc-other-month"))
+				return;
+			
 		      if ($(this).hasClass("festivoc"))
 		    	  FestivosR+=1;
 		    	  
@@ -266,7 +310,7 @@ function fSaveDatabaseOrExcel(Operation){
           dataType: 'JSON',
           url: _urlPage,          
   		 complete: function(data) {	  			 
-  			 if (data.responseText.indexOf("Error")==0)
+  			 if (data.responseText.indexOf("[Error]")>0)
   			 {
   				$("#" + _IdLoadiongDiv).modal("hide");
   				$('#loaded #loadedtitle').html("Incorrecto");
@@ -337,7 +381,66 @@ function fSaveDatabaseOrExcel(Operation){
     <li><a onclick =_state('<%=Util.eEstadoCambiosGuardias.CANCELADA%>',<%=oCambio.getIdCambio()%>) href="#">NO</a></li>
     <li><a onclick =_state('<%=Util.eEstadoCambiosGuardias.RECHAZADA%>',<%=oCambio.getIdCambio()%>) href="#">CANCELAR</a></li>
 	*/
-	function _state (newstate, idchange, type)
+	
+	
+	function _addChange  (ChangeData)
+	{
+		
+		$.ajax({
+	          data: {datachange: ChangeData}, 
+	          type: 'POST',	          	          
+	          url: _REQUEST_CONTEXT + 'medico/add_cambio_guardia.jsp',
+	          dataType: 'JSON',
+	          complete: function(data) {
+	        	  if (data.responseText.indexOf("NOOK")>=0)
+	        	  {
+	        		  $("#error .panel-body").html(data.responseText);
+		        	  $("#error").show();  
+	        	  } 
+	        	  else  // OJO, SI VIENE CON ADMIN, LLAMAMOS A CAMBIAR ESTADO EN UN UNICO PASO
+	        		{
+	        		  if (_IS_A) // admin, cogwemos el ID devuelto por el add guardia
+	        		  {
+	        			 //vmatch = /[0-9]+/.exec(data.responseText).toString();
+	        			  var JSONADDCambioData = JSON.parse(data.responseText);
+	        			 // aprobamos
+	        			 _changeState (JSONADDCambioData.Estado, JSONADDCambioData.IdCambio,JSONADDCambioData.IdMedicoDestino, JSONADDCambioData.TipoCambio);
+
+	        		  }
+	        		  else
+	        		  {
+		        		  $("#success").show();
+		        		  $('#enviar').prop('disabled', true);
+	        		  }
+	        		}  
+	        		  
+	        		 
+	          },
+	          fail: function(data) {	        	
+	        	  $("#error").show();
+	          }
+	      });
+	}
+	
+	function _newChange  (idmedico, inicio, fin)
+	{
+		
+		$( "#confirmar_cambio" ).load( "medico/_list_medicos_cambio_guardia.jsp?idsolicitante=" + idmedico + "&inicio=" + inicio + "&fin=" + fin);
+		
+		$( "#confirmar_cambio" ).dialog(
+			    {
+			        title: 'Datos del cambio',
+			        position: { my: 'top', at: 'top+75' },
+			        width: '30%',
+			        close: function(event, ui)
+			        {
+			        //	 $("#editarmedico").dialog("destroy");
+			            
+			        }
+			    });
+		}
+	
+	function _state (newstate, idchange, type,destinatario)
 	{
 		
 		if (newstate!=_CANCELADA)
@@ -349,7 +452,7 @@ function fSaveDatabaseOrExcel(Operation){
 		
 		$( "#confirmar_cambio" ).dialog(
 			    {
-			        title: 'Datos del médico',
+			        title: 'Datos del cambio',
 			        position: { my: 'top', at: 'top+75' },
 			        width: '30%',
 			        close: function(event, ui)
@@ -360,15 +463,15 @@ function fSaveDatabaseOrExcel(Operation){
 			    });
 		}
 		else // CANCELADA, no MUESTRO FORMULARIO
-				_changeState(_CANCELADA,idchange, -1, type);
+				_changeState(_CANCELADA,idchange, destinatario, type);
 		
 	}
 	
-	function _changeState (newstate, idchange,authMedicoId, Type)
+	function _changeState (newstate, idchange,MedicoDestination, Type)
 	{
 		
 		  $.ajax({
-	          data: {id: idchange, state:newstate, authmedicoid:authMedicoId, type:Type}, 
+	          data: {id: idchange, state:newstate, MedicoDestination:MedicoDestination, type:Type}, 
 	          type: 'POST',	          
 	          url: _REQUEST_CONTEXT + 'medico/cambio_estado_guardia.jsp',
 	          complete: function(data) {	        	  	        	  

@@ -49,7 +49,7 @@
 	}
 	.residente {
 		color:#d9534f;
-	    min-height: 26px;		
+	    min-height: 15px;		
 	}
 	.refuerzo {
 		color: #1c94c4;
@@ -83,6 +83,7 @@
 	
 	#calendar {
 	width: 100%;
+	margin:0 auto;
     /*float: left;
     padding-right: 14px; */
 	}
@@ -106,6 +107,9 @@
 	}
 	    
 	table.ui-sortable  tr:hover {
+	    background:#fbd850 !important;
+	}
+	table.table-hover  tr:hover {
 	    background:#fbd850 !important;
 	}
 	
@@ -133,8 +137,11 @@
     line-height: 1.0;
     margin-bottom: 0px;
 	}
-
-	
+	#external-events-listing {min-height:48px}
+	#external-events-listing .fc-event  {font-size: 1.5em;background-color:#ffebcd;
+    color: #d9534f;
+	}
+	.pad3 {padding:3px}
 	#vacaciones .fc-agenda-slots td div {
      height: 40px !important;
 	}
@@ -274,6 +281,10 @@ ul#side-menu li>a:hover {
     cursor: move;
 }
 
+.fc-event[href], .fc-event.ui-draggable {
+    cursor: move;
+}
+
 .page-header {
      padding-bottom: 0px;
      margin-top: 10px;
@@ -283,10 +294,41 @@ ul#side-menu li>a:hover {
     background-color: #2d9eab; 
 }
 
+.sinborde {border:0px}
+.borderdrop {    border: 2px dashed};
+
 div.dataTables_info {    white-space: inherit;}
 div.dataTables_filter input { 
     display: block;
 }
+
+.fc-day-grid-event {overflow-y:auto;overflow-x:hidden;}
+
+.fc-day-grid-event::-webkit-scrollbar-track
+{
+	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.1);
+	background-color: #F5F5F5;
+	border-radius: 10px;
+}
+
+.fc-day-grid-event::-webkit-scrollbar
+{
+	width: 10px;
+	background-color: #F5F5F5;
+}
+
+.fc-day-grid-event::-webkit-scrollbar-thumb
+{
+	border-radius: 10px;
+	background-color: #FFF;
+	background-image: -webkit-linear-gradient(top,
+											  #e4f5fc 0%,
+											  #bfe8f9 50%,
+											  #9fd8ef 51%,
+											  #2ab0ed 100%);
+}
+
+
 
 
 .checkbox {

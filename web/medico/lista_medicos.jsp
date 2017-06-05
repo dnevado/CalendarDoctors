@@ -9,25 +9,7 @@
 
 var _DoctorTableList;
 
-function EditarMedico(ID){
-	
-	
-		
-	$( "#editarmedico" ).load( "medico/detallemedico.jsp?q=12123&id="  + ID);
-	
-	$( "#editarmedico" ).dialog(
-		    {
-		        title: 'Datos del médico',
-		        position: { my: 'top', at: 'top+75' },
-		        width: '30%',
-		        close: function(event, ui)
-		        {
-		        //	 $("#editarmedico").dialog("destroy");
-		            
-		        }
-		    });		
-	
-}
+
 
 function fn_callOrdenDoctorList() {
 	//Return a helper with preserved width of cells	
@@ -139,4 +121,4 @@ function fn_callOrdenDoctorList() {
 	%>	
 	</tbody>
 </table>
-	<div id="editarmedico"  title="Datos del Médico"></div>
+	<!--  <div id="editarmedico"  title="Datos del Médico"></div>-->

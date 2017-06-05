@@ -11,6 +11,8 @@
 <%@page import="com.guardias.database.ConfigurationDBImpl"%>
 
 <%@page import="java.util.*"%>
+<%@page import="com.guardias.mail.*"%>
+
 
 <%@page import="java.util.Calendar"%>
 <%@page import="java.text.*"%>
@@ -58,14 +60,14 @@ boolean bIsAdministrator = MedicoLogged.isAdministrator();
 _medico = MedicoDBImpl.getMedicos(MedicoLogged.getID()).get(0) ;
 
 
-Long AuthMedico = Long.parseLong(request.getParameter("authmedicoid"));
+Long DestinationMedico = Long.parseLong(request.getParameter("MedicoDestination"));
 Util.eTipoCambiosGuardias _ChangeType =Util.eTipoCambiosGuardias.valueOf(request.getParameter("type"));
 
 
 
 //data: {id: idchange, state:newstate, authmedicoid:authMedicoId, type:Type}, 
 
-Medico _oAuthMedico = MedicoDBImpl.getMedicos(AuthMedico).get(0);
+Medico oDestinationMedico = MedicoDBImpl.getMedicos(DestinationMedico).get(0);
 
 if(request.getParameter("id")!=null)
 	IDCambio = new Long(request.getParameter("id"));
@@ -74,7 +76,7 @@ if(request.getParameter("state")!=null)
 
 Util.eEstadoCambiosGuardias _State = Util.eEstadoCambiosGuardias.valueOf(Estado);
 
-CambiosGuardias oCambioG = null;;
+CambiosGuardias oCambioG = null;
  	
 oCambioG = CambiosGuardiasDBImpl.getCambioGuardiasById(IDCambio.intValue()); 
  	
@@ -84,7 +86,7 @@ oCambioG.setFechaAprobacion(_format.format(new Date()));
  	
 oCambioG.setUsuarioAprobacion(_medico.getID());
 
-oCambioG.setIdMedicoDestino(AuthMedico.equals(new Long(-1)) ? null : AuthMedico);
+oCambioG.setIdMedicoDestino(DestinationMedico.equals(new Long(-1)) ? null : DestinationMedico);
 
 oCambioG.setTipoCambio(_ChangeType.toString());
 
@@ -113,13 +115,13 @@ if (_CalendarioGoogle.equals("S"))
 if (oCambioG.getEstado().equals(Util.eEstadoCambiosGuardias.APROBADA.toString()))
 {
 
-	List<Guardias> _lGuardiaSolicitante =   GuardiasDBImpl.getGuardiasMedicoFecha(_medico.getID(), oCambioG.getFechaIniCambio());
+	List<Guardias> _lGuardiaSolicitante =   GuardiasDBImpl.getGuardiasMedicoFecha(oCambioG.getIdMedicoSolicitante(), oCambioG.getFechaIniCambio());
 	Guardias _GuardiaSolicitante = null;
 	Guardias _GuardiaDestino = null;
 	if (_lGuardiaSolicitante!=null && _lGuardiaSolicitante.size()>0)
 	{
 		_GuardiaSolicitante = _lGuardiaSolicitante.get(0);
-		List<Guardias> _lGuardiaDestino =   GuardiasDBImpl.getGuardiasMedicoFecha(AuthMedico, oCambioG.getFechaFinCambio());
+		List<Guardias> _lGuardiaDestino =   GuardiasDBImpl.getGuardiasMedicoFecha(DestinationMedico, oCambioG.getFechaFinCambio());
 		if (_lGuardiaDestino!=null && _lGuardiaDestino.size()>0)
 		{
 			_GuardiaDestino  = _lGuardiaDestino.get(0);
@@ -228,15 +230,16 @@ if (oCambioG.getEstado().equals(Util.eEstadoCambiosGuardias.APROBADA.toString())
 			} // FIN DE SI ES UN CAMBIO DE GUARDIA
 		    else // es una cesion, le borro la guardia del dia. 
 		    {
-		    	GuardiasDBImpl.DeleteGuardia(_GuardiaSolicitante.getIdMedico(), _GuardiaSolicitante.getDiaGuardia());
+			    	GuardiasDBImpl.DeleteGuardia(_GuardiaSolicitante.getIdMedico(), _GuardiaSolicitante.getDiaGuardia());
 		    	
 		    	// falta crear una para el origen puesto que se ha eliminado.
 		    	
 		    	Guardias oGuardiaCesion= new Guardias();		    	
 		    	
+		    	//oGuardiaCesion.setIdCambio(new Long(CambiosGuardiasDBImpl.getMaxIDCambiosGuardiasID()));
 		    	oGuardiaCesion.setDiaGuardia(_GuardiaSolicitante.getDiaGuardia());
 		    	oGuardiaCesion.setEsFestivo(_GuardiaSolicitante.isEsFestivo());
-		    	oGuardiaCesion.setIdMedico(_oAuthMedico.getID());
+		    	oGuardiaCesion.setIdMedico(DestinationMedico);
 		    	oGuardiaCesion.setTipo(_GuardiaSolicitante.getTipo());
 		    	oGuardiaCesion.setIdEventoGCalendar(null);
 		    	
@@ -274,12 +277,40 @@ if (oCambioG.getEstado().equals(Util.eEstadoCambiosGuardias.APROBADA.toString())
 		    	
 		    }
 			
+			
+		
+		
+			
 		}
 	
 	}
+	
+	
+	
 }
 
-out.println(_oAuthMedico.getNombre() + " " + _oAuthMedico.getApellidos());
+/* 	FIN DE ACTUALIZACION DE ESTADOS Y MOVIMIENTO DE DIA */
+// enviamos email  administrador e usuarios 
+List<Medico> lAdministradores =  MedicoDBImpl.getMedicosAdministradores();
+String[] Emails;
+List<String> lEmails = new ArrayList<String>();	
+for (Medico oMedico : lAdministradores)
+{
+	lEmails.add(oMedico.getEmail());
+}
+Medico oSolicitante = MedicoDBImpl.getMedicos(oCambioG.getIdMedicoSolicitante()).get(0);
+Medico oDestino=null;
+if (oCambioG.getIdMedicoDestino()!=null)
+{
+	oDestino = MedicoDBImpl.getMedicos(oCambioG.getIdMedicoDestino()).get(0);
+	lEmails.add(oDestino.getEmail());
+}
+lEmails.add(oSolicitante.getEmail());
+
+
+MailingUtil.SendScheduleChangeNotification(lEmails.parallelStream().toArray(String[]::new), oCambioG, true);
+if (oDestino!=null)
+	out.println(oDestinationMedico.getNombre() + " " + oDestinationMedico.getApellidos());
 	
 
 	

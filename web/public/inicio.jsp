@@ -24,6 +24,7 @@
     <script src='<%=request.getContextPath()%>/js/ga.js'></script>		
     <script src='<%=request.getContextPath()%>/js/ekko-lightbox.min.js'></script>
     <script src='<%=request.getContextPath()%>/js/ouibounce.min.js'></script>
+    <script src='<%=request.getContextPath()%>/js/sessioncam.js'></script>
   
   	
   	
@@ -354,7 +355,7 @@
   <p>Planifica y distribuye eficientemente a todo tu servicio médico de manera ágil y organizada.</p> 
   <form class="form-inline" role="form" method="post" data-toggle="validator" name="fsuscribe" id=fsuscribe onsubmit="return _subscribe('1')">
     <div class="input-group">
-      <input class="form-control" type="email" class="form-control"id="email" name="email" size="50" placeholder="Email" required>
+      <input class="form-control" type="email" class="form-control"id="email" name="email" size="50" placeholder="Tu email" required>
       <div class="input-group-btn">
         <button id=suscribe_button type="submit" class="btn btn-info" >Pruébalo GRATIS!</button>
       </div>
@@ -461,9 +462,9 @@
     </div>
     <div class="col-sm-4">
       <div class="thumbnail">
-        <a data-title="Festivos y Pool days" href="images/mockup_offdays.png" data-gallery="medoncalls" data-toggle="lightbox"><img class="img-fluid" src="images/mockup_offdays.png" alt="Distribuye vacaciones" width="400" height="300"></a>
+        <a data-title="Festivos y Vacaciones" href="images/mockup_offdays.png" data-gallery="medoncalls" data-toggle="lightbox"><img class="img-fluid" src="images/mockup_offdays.png" alt="Distribuye vacaciones" width="400" height="300"></a>
         <p><strong>Planifica</strong></p>
-        <p>Festivos y Pool days</p>
+        <p>Festivos y Vacaciones</p>
       </div>
     </div>
     <div class="col-sm-4">

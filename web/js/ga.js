@@ -17,3 +17,13 @@
 
   ga('create', 'UA-92231353-2', 'auto');
   ga('send', 'pageview');
+
+  
+  /* MOUSEFLOW FOR MEDONCALLS */
+  window._mfq = window._mfq || [];
+  (function() {
+    var mf = document.createElement("script");
+    mf.type = "text/javascript"; mf.async = true;
+    mf.src = "//cdn.mouseflow.com/projects/d7797978-827f-4567-93d1-d3dfb081f515.js";
+    document.getElementsByTagName("head")[0].appendChild(mf);
+  })();

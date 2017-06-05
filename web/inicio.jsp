@@ -28,6 +28,8 @@
 <link href='<%=request.getContextPath()%>/css/custom.css?er4544423423423' rel='stylesheet'/> 
 <link href="<%=request.getContextPath()%>/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 <link href="<%=request.getContextPath()%>/dist/css/sb-admin-2.css" rel="stylesheet">	
+<link href="<%=request.getContextPath()%>/css/introjs.css" rel="stylesheet">
+<link href="<%=request.getContextPath()%>/css/introjs-modern.css" rel="stylesheet">
 <script src='<%=request.getContextPath()%>/js/lib/moment.min.js'></script>
 <script src='<%=request.getContextPath()%>/js/lib/jquery.min.js'></script>
 <script src='<%=request.getContextPath()%>/js/bootstrap.min.js'></script>
@@ -41,11 +43,14 @@
 <script src='<%=request.getContextPath()%>/js/guardias.js?timestamp=3131236574567567'></script>
 <script src='<%=request.getContextPath()%>/js/interact.min.js'></script>
 <script src='<%=request.getContextPath()%>/js/ga.js'></script>
+<script src='<%=request.getContextPath()%>/js/intro.js'></script>
 
 
 
 </head>
 <script>  var obj = {};
+		var _CANCELADA= '<%=Util.eEstadoCambiosGuardias.CANCELADA.toString()%>';
+		var _APROBADA= '<%=Util.eEstadoCambiosGuardias.APROBADA.toString()%>';
 		var _PRESENCIA = '<%=Util.eTipoGuardia.PRESENCIA.toString().toLowerCase()%>';
 		var _LOCALIZADA= '<%=Util.eTipoGuardia.LOCALIZADA.toString().toLowerCase()%>';
 		var _REFUERZO= '<%=Util.eTipoGuardia.REFUERZO.toString().toLowerCase()%>';
@@ -54,7 +59,9 @@
 		var _SIMULADO= '<%=Util.eSubtipoResidente.SIMULADO.toString().toLowerCase()%>';		
 		var _REQUEST_CONTEXT ='<%=request.getContextPath()%>/';
 		var _REQUEST_URI ="<%=request.getRequestURI()%>";
-		var _USER_LOGGED ='<%=MedicoLogged.getID()%>';
+		var _USER_LOGGED ='<%=MedicoLogged.getID()%>';		
+		var _IS_A = $.parseJSON('<%=MedicoLogged.isAdministrator()%>');
+
 </script>
 
 <%
@@ -102,132 +109,313 @@ if (request.getParameter("start_calc")!=null)  // se rellena con los huecos
 }	
 %>
 <script>
+
+
 var _Start;
 var _Duration;
+var cancelDrag = false;
 
 
-$(document).ready(function() {
+function _DropEvent(event, delta, revertFunc){
 	
-
-	 var _defaultDate= new Date();
-	 
-	 var cancelDrag = false;
-	
-	<% if (!_SelectedMonth.equals("")) { %>
+	if (cancelDrag)
+	{
 		
-	   _defaultDate = '<%=_SelectedMonth%>';
+		// si viene del drop de eventos internos, la tengo, de externos, no
+		try
+		 {
+			revertFunc();
+		 }
+		catch(e){}
+		
+		return false;
+	}
 	
-	<% } %>
 	
-	
-	$('#calendar').fullCalendar({
-		header: {
-		        left: 'prev,next today',
-                center: 'title',
-                right: 'year,month,basicWeek,basicDay'
-		},
-		defaultDate: _defaultDate,
-		fixedWeekCount : false, // solo semanas del mes
-		aspectRatio: 2.1,
-		navLinks: true, // can click day/week names to navigate views
-		editable: true,			 
-		eventLimit: true, // allow "more" link when too many events
-		color: "yellow",   // an option!
-	    textColor: "black", // an option!
-	    selectHelper : true,
-	    locale: 'es',
-		events:   {
-			url: '<%=_PageToFill%>',
-			//method : 'post',
-			data : obj,
-			error: function() {
-				$('#script-warning').show();
-			}
-		},
-		loading: function (bool) {
-			if (bool)
-				    
-				    $('#loading').modal('show');
-				  else 
-				    $('#loading').modal('hide');
-		 } ,
-	    eventAfterAllRender: function (view) {
-	    	_FillDataDays();
-	    	_OrdenarGuardias();
-	    },
-	    eventRender: function (event, element) {
-	    	element.find('.fc-title').html(event.title); // si encuentra input?
-	    	if (event.title.indexOf("input")>=0)
-	    		element.addClass('poolday');
-	    },
-	 /*   eventRender: function (event, element) {
-	    	event.editable = false;
-	    },*/
-	      
-	    eventDragStart: function (event, jsEvent, ui, view) {
-                console.log(event);
-                cancelDrag =  !(_IsMedicoONCall(_USER_LOGGED,event.title));
-            	  
-               // var dragged = [ui.helper[0], event];
-            },    
-	    eventDrop: function(event, delta, revertFunc) {
-			
-	    	if (cancelDrag)
-	    	{
-	    		revertFunc();
-	    		return false;
-	    	}
-	    	console.log(event.title + " was dropped on " + event.start.format());
-			
-	        $("#modalCambioGuardias").modal("show");
-	        
-	        _Start =  event.start.format();
-	        _Duration =  delta.days();
-	        /* QUITAMOS LAS LLAMADAS PREVIAS */
-	        $('#btCancelChange').off('click');
-	        $('#btCancelChange').unbind("click");	        
-	        
-	        $('#btAcceptChange').off('click');
-	        $('#btAcceptChange').unbind("click");
-	        
-	        
-	        $('#btCancelChange').on('click',function(evt){
-	        	$("#modalCambioGuardias").modal ("hide");
-	        	revertFunc();
-	    		return false;
-	        });
-	        
-	        $('#btAcceptChange').on('click',function(evt){
-	        	
-	        	
-	        	$("#modalCambioGuardias").modal ("hide");
-	        	revertFunc();// que vuelva al dia 
-				$.ajax({
-				data: 'start=' + _Start + '&duration=' + _Duration,
-  	            type: 'POST',
-  	            url: '<%=request.getContextPath()%>/medico/cambio_guardia.jsp',
-	  	        complete: function(data) {
-	  	        	//	alert(data.responseText);
-	  	        		$('#loadedbody span').html(data.responseText);
+ 	console.log(event.title + " was dropped on " + event.start.format());
+		
+     $("#modalCambioGuardias").modal("show");
+     
+     _Start =  event.start.format();
+     _Duration =  delta.days();
+     /* QUITAMOS LAS LLAMADAS PREVIAS */
+     $('#btCancelChange').off('click');
+     $('#btCancelChange').unbind("click");	        
+     
+     $('#btAcceptChange').off('click');
+     $('#btAcceptChange').unbind("click");
+     
+     
+     $('#btCancelChange').on('click',function(evt){
+     	$("#modalCambioGuardias").modal ("hide");
+     	try
+		 {
+			revertFunc();
+		 }
+		catch(e){}
+ 		return false;
+     });
+     
+     $('#btAcceptChange').on('click',function(evt){
+     	
+     	
+     	$("#modalCambioGuardias").modal ("hide");
+     	    try
+     	    {
+    			revertFunc();
+    			// borramos de la zona de drag 
+    			$('#external-events .fc-event').each(function() {
+    				$(this).remove();
+    			});
+    		}
+    		catch(e){}
+			$.ajax({
+			data: 'start=' + _Start + '&duration=' + _Duration,
+		    //contentType: "application/json",
+		    dataType: "json",
+           type: 'POST',
+           url: '<%=request.getContextPath()%>/medico/cambio_guardia.jsp',
+	        complete: function(data) {
+	        	 	
+	        	/* 	dataRESULT = JSON.stringify(data.responseText);
+	        		console.log(JSON.stringify(dataRESULT.medico)); */
+	        		if (data.responseText.indexOf("NOOK")>=0)
+	        		{
+	        			$('#loadedbody span').html(data.responseText);
 	  	        		$('#loadedtitle').html("Información");
 		        	  	$('#loaded').modal('show');
-		        	  	
-		          },
-		        fail: function(data) {
-		        	
-		        	  alert("Error" + data);
-		          }
-  	        	});
-				
-	        });
-
-	    }
-		    
-		    
-		    
-	});
+	        		}	  	        			
+	        		else
+	        		{
+	        			var _oCAMBIOJSON = $.parseJSON(data.responseText);
+	        	  	    var oCambio = new Object ();
+	        	  		oCambio.idmedico = _oCAMBIOJSON.medico;
+	        	  		oCambio.inicio = _oCAMBIOJSON.start;
+	        	  		oCambio.end = _oCAMBIOJSON.end;
+	        	  		 
+	        			_newChange (oCambio.idmedico,oCambio.inicio , oCambio.end );
+	        			
+	        		}
+	        	
+	        		// segundo paso, llamas por ajax al formulario 
+	        		 
+	        	
+	        	//	alert(data.responseText);
+	        		/*$('#loadedbody span').html(data.responseText);
+	        		$('#loadedtitle').html("Información");
+	        	  	$('#loaded').modal('show');*/
+	        	  	
+	          },
+	        fail: function(data) {
+	        	
+	        	  alert("Error" + data);
+	          }
+       	});
+			
+     });
 	
+}
+
+function _DragExternalEvents(event, delta, revertFunc)
+{
+	
+$('#external-events .fc-event').each(function() {
+
+    // store data so the calendar knows to render an event upon drop
+    $(this).data('event', {
+        title: $.trim($(this).val()), // use the element's text as the event title
+        stick: true // maintain when user navigates (see docs on the renderEvent method)
+    });
+
+    // make the event draggable using jQuery UI
+    $(this).draggable({
+        zIndex: 999,
+        revert: true,      // will cause the event to go back to its
+        revertDuration: 0  //  original position after the drag
+    });
+
 });
+}
+
+
+/* METEMOS UN 5% DE MARGEN */
+
+var isEventOverDiv = function(x, y) {
+
+    var external_events = $( '#external-events' );
+    //var position = external_events.getBoundingClientRect();
+   
+    var offset = external_events.offset();
+    offset.right = external_events.width() + offset.left;
+    offset.bottom = external_events.height() + offset.top;
+	
+    var AbsX = x + document.body.scrollLeft;
+    var AbsY = y + document.body.scrollTop;
+    
+    
+    // Compare
+    if (AbsX >= (offset.left - offset.left*0.15)
+        && AbsY >= (offset.top - offset.top*0.15)
+        && AbsX <= (offset.right + offset.right*0.15)
+        && AbsY <= (offset.bottom + offset.bottom*0.15)) { return true; }
+    return false;
+
+}
+
+
+function allowDrop(ev) {
+	console.log("allowDrop");
+    //ev.preventDefault();
+    console.log("allowDrop2");
+}
+
+function drag(ev) {
+	console.log("drag");
+   // ev.dataTransfer.setData("text", ev.target.id);
+    console.log("drag2");
+}
+
+function drop(ev) {
+	console.log("dropev");
+    //ev.preventDefault();
+    //var data = ev.dataTransfer.getData("text");
+    //ev.target.appendChild(document.getElementById(data));
+    console.log("dropev2");
+}
+
+
+var _dateExternalEvent="";
+	
+$(document).ready(function() {
+			
+
+		//jQuery.event.props.push('dataTransfer');
+
+		$.event.addProp('dataTransfer');
+	
+		 var _defaultDate= new Date();
+		 
+		 
+		
+		<% if (!_SelectedMonth.equals("")) { %>
+			
+		   _defaultDate = '<%=_SelectedMonth%>';
+		
+		<% } %>
+		
+		
+		$('#calendar').fullCalendar({
+			header: {
+			        left: 'prev,next today',
+	                center: 'title',
+	                right: 'year,month,basicWeek,basicDay'
+			},
+			defaultDate: _defaultDate,
+			fixedWeekCount : false, // solo semanas del mes
+			aspectRatio: 2,
+			navLinks: true, // can click day/week names to navigate views
+			height:600,
+			droppable: true,		
+			 dragRevertDuration: 0,
+			editable: true,			 
+			eventLimit: true, // allow "more" link when too many events
+			color: "yellow",   // an option!
+		    textColor: "black", // an option!
+		    selectHelper : true,
+		    locale: 'es',
+			events:   {
+				url: '<%=_PageToFill%>',
+				//method : 'post',
+				data : obj,
+				error: function() {
+					$('#script-warning').show();
+				}
+			},
+			eventReceive  : function( event ) 
+			{ 
+				//console.log("eventReceive");
+				$("#calendar").fullCalendar('removeEvents', event._id); //replace 123 with reference to a real ID
+
+			}, 
+			drop : function( date, jsEvent, ui, resourceId ) { 
+
+				// event.preventDefault();
+			   // var data = event.dataTransfer.getData("text");
+			    console.log("drop");
+			 	var _Date1= moment(date.format('YYYY-MM-DD'));
+			 	var _Date2= moment(jsEvent.target.innerHTML);
+				
+			 	var objEvent = new Object();				
+				 objEvent.title= jsEvent.target.innerHTML;  //
+				 objEvent.start= _Date1;
+				 
+				 var objDelta = new Object();
+				 objDelta.days =  function () {  return _Date1.diff(_Date2,'days') };
+				 
+				 
+				 _DropEvent(objEvent,objDelta, function () {});
+			 },
+			eventDragStop: function( event, jsEvent, ui, view ) {
+	            
+	        	console.log("eventDragStop");
+	        	
+	        	$("#external-events-listing").removeClass("borderdrop");
+                $("#external-events-listing").addClass("sinborde");
+	        	
+	            if(isEventOverDiv(jsEvent.clientX, jsEvent.clientY)) {
+	               // $('#calendar').fullCalendar('removeEvents', event._id);
+	              // <div id="div1" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+
+	                var el = $( "<div  draggable='true'  id='ExEvent' ondragstart='drag(event)'  class='fc-event'>" ).appendTo( '#external-events-listing' ).text( event.start.format());
+	                //el.
+	                el.draggable({
+	                  zIndex: 999,
+	                  revert: true, 
+	                  revertDuration: 0 
+	                });
+	                el.data('event', { title: event.title, id :event.id, stick: false});                
+	            }
+	        },
+			loading: function (bool) {
+				if (bool)
+					    
+					    $('#loading').modal('show');
+					  else 
+					    $('#loading').modal('hide');
+			 } ,
+		    eventAfterAllRender: function (view) {
+		    	_FillDataDays();
+		    	_OrdenarGuardias();
+		    },
+		    eventRender: function (event, element) {
+		    	element.find('.fc-title').html(event.title); // si encuentra input?
+		    	if (event.title.indexOf("input")>=0)
+		    		element.addClass('poolday');
+		    },
+		 /*   eventRender: function (event, element) {
+		    	event.editable = false;
+		    },*/
+		      
+		    eventDragStart: function (event, jsEvent, ui, view) {
+	                console.log(event);
+	                cancelDrag =   !_IsMedicoONCall(_USER_LOGGED,event.title) && !_IS_A;
+	                $("#external-events-listing").addClass("borderdrop");
+	                $("#external-events-listing").removeClass("sinborde");
+	              
+	            	  
+	               // var dragged = [ui.helper[0], event];
+	            },    
+		    eventDrop: function(event, delta, revertFunc) {
+				
+		    	_DropEvent(event,delta,revertFunc);
+		    	
+		    }	
+			    
+			    
+			    
+		});
+		
+	});
 </script>
 <body>
     <div id="wrapper">
@@ -240,9 +428,9 @@ $(document).ready(function() {
                 <div class="col-lg-12">
                     <h1 class="page-header">Calendario </h1>
                 </div>
-                 <div class="panel-heading">
-                           <div class="row">
-                               <div class="col-lg-10">	
+                 <div class="panel-heading">                 		 
+                          <div class="row">
+                               <div class="col-lg-10">	                               		
                                		<p>(* Recuerda generar el primer mes correcto. No se permite almacenar guardias pasadas.)</p>								        	   	                                                                     
                                    <div id='calendar'></div>
                                    <!--  hay resultados -->
@@ -268,19 +456,22 @@ $(document).ready(function() {
 			                    	<% } %>                       
                              </div>
                              
-                               <%	
-                               if (MedicoLogged.isAdministrator()) {
-                               %>
+                               
                                <div class="col-lg-2">
+                               		 
+				                 
+                               
                                		<div class="panel panel-yellow colorsguardias"><div class="panel-heading">Presencia</div></div> 
                                		<div class="panel panel-green colorsguardias"><div class="panel-heading">Localizada</div></div>                               		
                                		<div class="panel panel-primary colorsguardias"><div class="panel-heading">Refuerzo</div></div>
                                		<div class="panel panel-red colorsguardias"><div class="panel-heading">Residente</div></div>
-                               		
+                               		<%	
+	                               		if (MedicoLogged.isAdministrator()) {
+	                               	%>		
                                                                                                     
                                     <div class="panel panel-green">
-				                        <div class="panel-heading">
-				                            <i class="fa fa-bar-chart-o fa-fw"></i> Configurar Mes
+				                        <div class="panel-heading">				                        
+				                            <i class="fa fa-calendar-minus-o"></i> Configurar Mes
 				                        </div>
 				                        <div class="panel-body">				                            
 				                            <form  id=ff method=post ><!--  onsubmit="return  fn_FillMonth()" -->
@@ -345,6 +536,7 @@ $(document).ready(function() {
 										</div>
 									</div>
 									<% } %>
+									<% if (!_bCalculating) { %>
 									<div id="toExcel" class="panel panel-yellow">
 				                        <div class="panel-heading">
 				                            <i class="fa fa-bar-chart-o fa-fw"></i> Excel
@@ -381,14 +573,37 @@ $(document).ready(function() {
 											
 										</div>
 									</div>
+									<% } %>
 									
-                        			<!-- /.panel-body -->
-                    				</div><!-- class="col-xs-2"> -->
                     				<% 
-                    				}
-                    				
-                    				%>
-                    				
+                    				}                    				
+                    				if (!_bCalculating) { %>
+			                 		<jsp:include page="tour/tour.jsp"/>
+			                 		
+			                 		<div class="panel panel-primary ">
+				                        <div class="panel-heading">
+				                            <i class="fa fa-hand-o-right" aria-hidden="true"></i>  Arrastra aquí tu cambio
+				                            <i class="fa fa-drivers-license-o"></i> 
+				                        </div>
+				                        <div class="panel-body pad3">	
+					                        <div id='external-events' data-step='31'  data-intro='Arrastra aquí los días que desees cambiar entre meses distintos (navegando con la flecha -> y <- del calendario)'>
+										          <div id='external-events-listing'>
+										            <!-- <div class='fc-event'>My Event 1</div> -->										           
+										          </div>										          										       
+											</div>
+										</div>	
+										<a href=javascript:void(0);" onclick="startIntro();">												 
+												<div class="panel-footer">
+					                                <span class="pull-left">Muéstrame cómo</span>					                                
+					                                <i class="pull-right fa fa-eye" aria-hidden="true"></i>
+					                                <div class="clearfix"></div>
+					                            </div>
+										</a>
+										
+										
+									</div><% } %>
+			                 	<!-- class="col-xs-2"> -->
+                        			
                     				
                                </div>
                            </div>
@@ -469,6 +684,7 @@ $(document).ready(function() {
 				
       </div>    
 		<div id="frame1"></div>
+		<div id=confirmar_cambio></div>
 </body>
 </html>
 

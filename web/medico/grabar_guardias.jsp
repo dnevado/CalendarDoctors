@@ -77,7 +77,7 @@
     /* ERROR CUANDO HAY GUARDIAS POSTERIORES O HAY ANTERIORES Y QUE NO SEAN DEL MES ANTERIOR */
     if (lGuardiasPosteriores.size()>0 || (lGuardiasPrevias.size()>0 && lGuardiasMesAnterior.size()==0))
     {
-    	out.println("Error. No se puede continuar, debe generarse la guardia del mes previo y no existir guardias futuras");
+    	out.println("[Error]. No se puede continuar, debe generarse la guardia del mes previo y no existir guardias futuras");
     }
     else
     {

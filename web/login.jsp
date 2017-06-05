@@ -76,24 +76,14 @@ if (request.getParameter("email")!=null && request.getParameter("password")!=nul
 		
 		String resultPassword = SecurityUtil.GenerateEncriptedRandomPassword(Password);
 		String resultUser = SecurityUtil.GenerateEncriptedRandomPassword(User);
-		/* final MessageDigest messageDigest = MessageDigest.getInstance("SHA-512");
-		messageDigest.reset();
-		messageDigest.update(User.getBytes("UTF8"));
-		byte[] resultByte = messageDigest.digest();
-		String result = new String(Hex.encodeHex(resultByte));
-		messageDigest.reset();
-		messageDigest.update(Password.getBytes("UTF8"));
-		resultByte = messageDigest.digest();
-		final String resultPassword = new String(Hex.encodeHex(resultByte));
-		*/
-		
 		Medico oMLogged = MedicoDBImpl.getMedicoByEmail(User);
 		// en bbdd, activo, contraseña correcta y confirmado 
 		if (oMLogged!=null &&  oMLogged.isActivo() && oMLogged.getPassWord().equals(resultPassword) && oMLogged.isConfirmado())
 		{
-		
-			request.getSession().setAttribute("User", User);
-			request.getSession().setAttribute("MedicoLogged", oMLogged);
+			
+			HttpSession _session = request.getSession(false);
+			_session.setAttribute("User", User);
+			_session.setAttribute("MedicoLogged", oMLogged);
 			
 			
 			Cookie cookie = new Cookie("UserCookie",resultUser);

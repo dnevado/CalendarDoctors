@@ -45,9 +45,17 @@
 	
 	List<CambiosGuardias> lItems = null;
 	
-// DISTINGUIR ADMINISTRADOR O NO
-	lItems = CambiosGuardiasDBImpl.getCambioGuardiasByMedicoSolicitante(MedicoLogged.getID().intValue());
-	
+    // DISTINGUIR ADMINISTRADOR O NO
+    CambiosGuardias _oCambio = new CambiosGuardias(); 
+     if (!bIsAdministrator)
+    	lItems = CambiosGuardiasDBImpl.getCambioGuardiasByMedicoSolicitante(MedicoLogged.getID().intValue());
+    else
+    	lItems = CambiosGuardiasDBImpl.getCambiosGuardia();
+
+    if (lItems!=null && !lItems.isEmpty())
+    {
+    	
+    
 	for (int j=0;j<lItems.size();j++)
 	{
 		
@@ -86,15 +94,15 @@
     	  <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Confirmar
 		  <span class="caret"></span></button>
 		  <ul class="dropdown-menu">
-		    <li><a onclick =_state('<%=Util.eEstadoCambiosGuardias.APROBADA%>',<%=oCambio.getIdCambio()%>,'<%=Util.eTipoCambiosGuardias.CESION.toString()%>') href="#">SI,CESION</a></li>
-		    <li><a onclick =_state('<%=Util.eEstadoCambiosGuardias.APROBADA%>',<%=oCambio.getIdCambio()%>,'<%=Util.eTipoCambiosGuardias.CAMBIO.toString()%>') href="#">SI,INTERCAMBIO</a></li>		    
-		    <li><a onclick =_state('<%=Util.eEstadoCambiosGuardias.CANCELADA%>',<%=oCambio.getIdCambio()%>,'<%=Util.eTipoCambiosGuardias.NOAPLICA.toString()%>') href="#">CANCELAR</a></li>
+		    <li><a onclick =_state('<%=Util.eEstadoCambiosGuardias.APROBADA%>',<%=oCambio.getIdCambio()%>,'<%=oCambio.getTipoCambio()%>','<%=oCambio.getIdMedicoDestino()%>') href="#">APROBAR</a></li>		    		   
+		    <li><a onclick =_state('<%=Util.eEstadoCambiosGuardias.CANCELADA%>',<%=oCambio.getIdCambio()%>,'<%=oCambio.getTipoCambio()%>','<%=oCambio.getIdMedicoDestino()%>') href="#">CANCELAR</a></li>
 		  </ul>
 		  <% } %> 
 	</td>    
     </tr>
 		
 	<% }
+    }
 	%>	
 	</tbody>
 </table>

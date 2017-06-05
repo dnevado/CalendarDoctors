@@ -19,6 +19,11 @@
 <%@page import="java.util.*"%>
 <%@page import="java.util.Map.*"%>
 
+
+<%@page import="java.util.ResourceBundle"%>
+<%@page import="java.util.Locale"%>
+ 
+
 <jsp:useBean id="MedicoLogged" class="com.guardias.Medico" scope="session"/>
 
         
@@ -42,7 +47,7 @@
 
 boolean bError  = false;
 String  sError  = "";
-Long  Medico = new Long(0);
+Long  Medico = new Long(-1);
 Long  Duracion = new Long(0);
 
 
@@ -60,8 +65,8 @@ boolean bIsAdministrator = MedicoLogged.isAdministrator();
 boolean _ExistenOrigenYDestino =true;
 
 
-/* TEMPORAL */
-	Medico = MedicoLogged.getID();
+/* TEMPORAL*/ 
+Medico = MedicoLogged.getID();
 
 DateFormat _format = new SimpleDateFormat("yyyy-MM-dd");
 String ActivoCambioGuardias=  ConfigurationDBImpl.GetConfiguration(Util.getoCONST_ACTIVAR_CAMBIO_GUARDIAS()).getValue();
@@ -88,7 +93,12 @@ _cINICIO.add(Calendar.DATE, -Duracion.intValue());
 
 Calendar cHOY = Calendar.getInstance();
 
-List<Guardias> lGuardiaOrigen  = GuardiasDBImpl.getGuardiasMedicoFecha(Medico, _format.format(_cINICIO.getTime()));
+List<Guardias> lGuardiaOrigen  = null;
+if (!bIsAdministrator)
+ 	lGuardiaOrigen  = GuardiasDBImpl.getGuardiasMedicoFecha(Medico, _format.format(_cINICIO.getTime()));
+else
+	 lGuardiaOrigen  = GuardiasDBImpl.getGuardiasPorFecha(_format.format(_cINICIO.getTime()));
+
 Guardias GuardiaOrigen  = null;
 List<Guardias> lGuardiasDestinatarioEnOrigen =null;
 if (lGuardiaOrigen!=null && lGuardiaOrigen.size()>0)
@@ -105,7 +115,8 @@ if (lGuardiaOrigen!=null && lGuardiaOrigen.size()>0)
 	// TIENE ALGUNOS DE LOS DESTINATARIOS GUARDIAS EN ORIGEN ??
 	//QUE NO ESTE DE GUARDIA EL DESTINATORIO   EN EL ORIGEN
 	//lGuardiasDestinatarioEnOrigen = GuardiasDBImpl.getGuardiasMedicoFecha(GuardiaDestino.getIdMedico(), _format.format(_cINICIO.getTime()));
-	lGuardiasDestinatarioEnOrigen = GuardiasDBImpl.getGuardiasMedicoFecha(Medico, _format.format(_cINICIO.getTime()));
+	if (!bIsAdministrator)
+		lGuardiasDestinatarioEnOrigen = GuardiasDBImpl.getGuardiasMedicoFecha(Medico, _format.format(_cINICIO.getTime()));
 	
 	
 }
@@ -128,18 +139,18 @@ boolean bCambioFuturo = cHOY.before(_cINICIO);
 boolean bFinPosterior = true; //Duracion.intValue()>=1;
 // si no existe una solicitud previa 
 
-
+ResourceBundle RB = ResourceBundle.getBundle(Util.PROPERTIES_FILE, Locale.getDefault());
 
 if (!ActivoCambioGuardias.equals("S")  || DIA_FINAL.equals("") || Duracion.equals(new Long(0)) || Medico.equals(new Long(0)) )
 {
 	bError=true;
-	sError = "No es posible configurar un cambio de guardia. El sistema no lo permite";
+	sError = RB.getString("cambio_guardias.sistema_no_permite");
 }
 
-if (lGuardiaOrigen==null || lGuardiaOrigen.size()==0)
+if (!bIsAdministrator && (lGuardiaOrigen==null || lGuardiaOrigen.size()==0))
 {
 	bError=true;
-	sError = "No es posible solicitar este día. No dispones de guardia activa ";
+	sError = RB.getString("cambio_guardias.guardia_activa");
 }
 /* 
 if (lGuardiasDestinatarioEnOrigen!=null && lGuardiasDestinatarioEnOrigen.size()>0)
@@ -156,18 +167,20 @@ if (lGuardiasMedicoDestino!=null && lGuardiasMedicoDestino.size()>0)
 if (lGuardiasFecha==null || lGuardiasFecha.size()==0 )
 {
 		bError=true;
-		sError = "Error. Es necesario solicitar los cambios de guardias cuando la información esté almacenada en Base de Datos";
+		sError = RB.getString("cambio_guardias.guardia_enbbdd");
 }
-if (lVacaciones!=null &&  lVacaciones.size()>0)
+if (!bIsAdministrator && lVacaciones!=null &&  lVacaciones.size()>0)
 {
 		bError=true;
-		sError = "No es posible solicitar este día. Existe un día de vacaciones";
+		sError = RB.getString("cambio_guardias.existe_vacaciones"); 
 }
 if (!bCambioFuturo || !bFinPosterior)
 {
 		bError=true;
-		sError = "No es posible solicitar este día. Solo se permiten cambios futuros";
+		sError = RB.getString("cambio_guardias.cambios_futuros");
 }
+
+
 
 
 if (!bError)
@@ -179,22 +192,31 @@ if (!bError)
 	oCambioG.setEstado(Util.eEstadoCambiosGuardias.PENDIENTE.toString());
 	oCambioG.setFechaCreacion(_format.format(cHOY.getTime()));
 	oCambioG.setFechaIniCambio(_format.format(_cINICIO.getTime()));
-	oCambioG.setFechaFinCambio(_format.format(_cFIN.getTime()));	
-	oCambioG.setIdMedicoSolicitante(Medico);
+	oCambioG.setFechaFinCambio(_format.format(_cFIN.getTime()));
+	if (!bIsAdministrator)
+		oCambioG.setIdMedicoSolicitante(Medico);
 	
 	List<CambiosGuardias> lCambioGuardiasMedicoFecha = CambiosGuardiasDBImpl.getCambioGuardiasByMedicoSolicitanteYFechaYEstado(oCambioG);	
 	if (lCambioGuardiasMedicoFecha!=null &&  lCambioGuardiasMedicoFecha.size()>0)
 	{
 			bError=true;
-			sError = "No es posible solicitar este día. Existe una solicitud previa";
+			sError = RB.getString("cambio_guardias.solicitud_previa");
 			out.println("NOOK."+ sError);
 	}
 	else
 	{
-		CambiosGuardiasDBImpl.AddCambioGuardias(oCambioG);
+		//CambiosGuardiasDBImpl.AddCambioGuardias(oCambioG);
+  		 String _EventsJSON = "";
+		_EventsJSON += "{\"medico\": \"" + (bIsAdministrator  ? new Long(-1):  Medico) + "";
+		_EventsJSON +="\",";
+		_EventsJSON += "\"start\": \"" + _format.format(_cINICIO.getTime()) + "\",";
+		_EventsJSON += "\"end\": \"" + _format.format(_cFIN.getTime())   + "\"";		 
+		_EventsJSON += "}";
+		_EventsJSON += "";
+		//_EventsJSON=_EventsJSON.replace("},]", "}]");		
 		
 		
-		out.println("OK.Datos almacenados correctamente.Recuerda revisar la sección de cambios para revisar la autorización final del cambio");	
+		out.println(_EventsJSON);	
 	}
 	
 	
@@ -202,6 +224,8 @@ if (!bError)
 }
 else
 	out.println("NOOK."+ sError);	
+
+
 
 
 
