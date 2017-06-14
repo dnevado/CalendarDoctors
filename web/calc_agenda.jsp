@@ -1,4 +1,5 @@
 
+
 <%@page import="com.guardias.database.CambiosGuardiasDBImpl"%>
 <%@page import="com.guardias.database.GuardiasDBImpl"%>
 <%@page import="com.guardias.database.MedicoDBImpl"%>
@@ -14,6 +15,8 @@
 <%@page import="com.guardias.*"%>
 <%@page import="java.util.*"%>
 <%@page import="java.util.Map.*"%>
+<%@page import="com.guardias.aggregate.*"%>
+
 
 
 
@@ -130,7 +133,7 @@ String _Festivo = ""; // o B
 
 long _TOTAL_FESTIVOS_MES=0;
 
-HashMap<Long, Hashtable> lMedicosGuardias  = new HashMap<Long, Hashtable>();
+HashMap<Long, ContadorGuardias> lMedicosGuardias  = new HashMap<Long, ContadorGuardias>();
 List<Medico> _lResidentes  = new ArrayList<Medico>();
 List<Medico> _lAdjuntos  = new ArrayList<Medico>();
 
@@ -198,11 +201,11 @@ for (Medico oM :_lAdjuntos)
 	
 	Hashtable _lDatosGuardiasMedico=null;
 	
-	_lDatosGuardiasMedico  = ProcesarMedicos.InitContadoresMedico(oM, _ANYO_INICIO, _ANYO_HASTA,
+	ContadorAdjuntos  _CounterAdjuntos  = ProcesarMedicos.InitContadoresMedico(oM, _ANYO_INICIO, _ANYO_HASTA,
 			MEDIA_TOTAL_PRESENCIA, MEDIA_TOTAL_LOCALIZADA, MEDIA_TOTAL_REFUERZO, MEDIA_TOTAL_PRESENCIA_FESTIVO,
 			MEDIA_TOTAL_LOCALIZADA_FESTIVO, MEDIA_TOTAL_REFUERZO_FESTIVO, MEDIA_TOTAL_DIARIA,MEDIA_TOTAL_DIARIA_FESTIVA ); 
 
-	lMedicosGuardias.put(oM.getID(),_lDatosGuardiasMedico);
+	lMedicosGuardias.put(oM.getID(),_CounterAdjuntos);
 	
 }
 
@@ -235,23 +238,9 @@ if (_EsFestivo && !lFestivos.contains(new Long(j)))
 			lMedicosGuardias = UtilMedicos.setGuardiaPresenciaSecuencia(lMedicosGuardias, _lAdjuntos,_cINICIO.getTime(), _EsFestivo);
 		else
 			lMedicosGuardias = ProcesarMedicos.setGuardiaPresenciaAleatoria(lMedicosGuardias, _lAdjuntos,_cINICIO.getTime(), _EsFestivo,_daysOfMonth);
-		
-		//ProcesarMedicos.setlGeneradaSecuencia(new ArrayList(Long));
-		
-		
-		
-		
-	// si no ha encontrado a nadie mas, vaciamos la lista de control de asignaciones
-	
 	
 	} // fin de cuantas presencias hay que generar
-	
-	//if (bEncontrado)	
 	_cINICIO.add(Calendar.DAY_OF_MONTH, 1);
-	
-	
-	
-
 }
 		
 
@@ -315,28 +304,19 @@ for (int j=1;j<=_daysOfMonth;j++)
 
 //_NUM_TOTAL_RESIDENTES = ProcesarMedicos.getNumeroResidentes(lItems);			
 			
-//_lResidentes  =ProcesarMedicos.getResidentes(lItems);
 
 Calendar cLASTDAYMONTH= Calendar.getInstance();
 cLASTDAYMONTH.setTimeInMillis(_cFIN.getTimeInMillis());
 cLASTDAYMONTH.add(Calendar.DATE, -1);
 
 
-//_format.format(_cINI.getTime())
 
-//_lResidentes  =ProcesarMedicos.getResidentes(lItems);
-//_lResidentes  =ProcesarMedicos.getResidentesOrdenadosVacacionesDESC(lItems, _format.format(_cINI.getTime()), _format.format(cLASTDAYMONTH.getTime()));
 _lResidentes  =MedicoDBImpl.getMedicosByTypeOrdenBySimulados(Util.eTipo.RESIDENTE);
 _lResidentes  =ProcesarMedicos.getResidentesOrdenadosVacacionesDESC(_lResidentes, _format.format(_cINI.getTime()), _format.format(cLASTDAYMONTH.getTime()));
-
-
-//_format.format(_cANYO_INICIO.getTime());
-
 _NUM_TOTAL_RESIDENTES = new Long(_lResidentes.size());
 
 // no contemplamos vacaciones etc...es una aproximacion
 _NUM_TOTAL_GUARDIAS_CUBIERTAS_RESIDENTES = ProcesarMedicos.getGuardiasSinCubrir(Util.eTipo.RESIDENTE,_lResidentes,_cINI, _cFIN );   // SIMULADOS
-
 
 
 _cINI.setFirstDayOfWeek(Calendar.MONDAY); //sets first day to monday, for example.
@@ -356,28 +336,11 @@ for (int j=0;j<_lResidentes.size();j++)
 	 Medico oMedicoINIT = (Medico) _lResidentes.get(j);
 	 if (!lMedicosGuardias.containsKey(oMedicoINIT.getID()))
 	 {			
-			// la generamos
-		
-			
-		 Hashtable _lDatosGuardiasResidente= new Hashtable(); 
-		 lMedicosGuardias.put(oMedicoINIT.getID(),_lDatosGuardiasResidente);
-		 _lDatosGuardiasResidente.put("_TIPO",Util.eTipo.RESIDENTE);
-		 _lDatosGuardiasResidente.put("_SUBTIPO",oMedicoINIT.getSubTipoResidente());
-		 _lDatosGuardiasResidente.put("_NUMERO_GUARDIAS_" + Util.eTipo.RESIDENTE + "_MES",0);
-		 _lDatosGuardiasResidente.put("_TOTAL_GUARDIAS_" + Util.eTipo.RESIDENTE + "_FESTIVO",0);
-		
-		/* ACUMULAMOS EL HISTORICO DEL AÑO  LA PRIMERA VEZ */ 
-		int TOTAL_DIARIAS = GuardiasDBImpl.getTotalGuardiasPorMedicoTipoEntreFechas(oMedicoINIT.getID(), "" ,new Long(0),_ANYO_INICIO,_ANYO_HASTA);
-		if (TOTAL_DIARIAS==0) TOTAL_DIARIAS= MEDIA_TOTAL_DIARIA;
-		int TOTAL_DIARIAS_FESTIVO = GuardiasDBImpl.getTotalGuardiasPorMedicoTipoEntreFechas(oMedicoINIT.getID(), "" ,new Long(1),_ANYO_INICIO,_ANYO_HASTA);
-		if (TOTAL_DIARIAS_FESTIVO==0) TOTAL_DIARIAS_FESTIVO= MEDIA_TOTAL_DIARIA_FESTIVA;
-		
-		_lDatosGuardiasResidente.put("HISTORICO_NUMERO_GUARDIAS_" + Util.eTipo.RESIDENTE + "_MES",TOTAL_DIARIAS);
-		_lDatosGuardiasResidente.put("HISTORICO_TOTAL_GUARDIAS_" + Util.eTipo.RESIDENTE + "_FESTIVO",TOTAL_DIARIAS_FESTIVO);
-			
+		 
+		 ContadorResidentes  _CounterResidentes  = ProcesarMedicos.InitContadoresResidentes(oMedicoINIT, _ANYO_INICIO, _ANYO_HASTA, MEDIA_TOTAL_DIARIA, MEDIA_TOTAL_DIARIA_FESTIVA); 	
+		 lMedicosGuardias.put(oMedicoINIT.getID(),_CounterResidentes);
 			
 	  }			
-	
 }
 
 
@@ -410,6 +373,10 @@ for (int x=0;x<_lPoolDAYS.size();x++)   // recorremos los pool dates
 				
 				// existe el medico residente en su lista de control
 				Hashtable _lDatosGuardiasMedico=null;
+				
+				ContadorGuardias _CounterResidentes = lMedicosGuardias.get(
+						oM.getID());
+				//_CounterResidentes.
 					// la obtenemos la que haya 
 				_lDatosGuardiasMedico = (Hashtable) lMedicosGuardias.get(oM.getID());
 				
